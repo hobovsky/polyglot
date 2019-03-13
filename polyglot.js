@@ -43,9 +43,10 @@ HOW TO USE IT?
    in a very annoying manner.
  - Contents of "Solutions" and "Past solutions" views are displayed in
    tabs by language.
+ - Highlight solved languages in language dropdowns.
+ - TODO: Tabbed snippets in kata reference section on translation page.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
- - TODO: Highlight solved languages in language dropdowns.
  - TODO: You can configure the script and enable/disable features.
 
 HOW TO UNINSTALL IT?
@@ -179,6 +180,19 @@ function dimSolved(elem) {
     }
 }
 
+function highlightDropdownLangs(divLangSelector) {
+    divLangSelector = jQuery(divLangSelector);
+    let kataId = divLangSelector.parents().prev().children('div.info-row.code-challenge').data('id');
+    let langs = GM_getValue('glot.katalangs.' + kataId, []);
+
+    let itemByLang = new Map();
+    divLangSelector.find('dl>dd[data-value]').each((i,e) => itemByLang.set(e.dataset.value, e));
+
+    for(lang of langs) {
+        let langElem = itemByLang.get(lang);
+        jQuery(langElem).toggleClass('dimmed');
+    }
+}
 
 /********************************
 *           Search result       *
@@ -257,7 +271,7 @@ function shouldHighlight(elem) {
 let css =
 `
 .dimmed {
-  -webkit-filter: grayscale(0.8) blur(2px);
+  -webkit-filter: grayscale(0.8) blur(1px);
 }
 
 .btnCopy {
@@ -353,7 +367,7 @@ function addCopyButton(codeElem, attempt=10) {
         if(codeElem.parent('pre').length && !codeElem.children('button.btnCopy').length) {
 
             if(codeElem.children('span').length) {
-                codeElem.prepend("<button class='btnCopy'>" + btnCaption + "</button>");
+                codeElem.prepend("<button class='btnCopy' type='button'>" + btnCaption + "</button>");
                 let btn = codeElem.children('button').first();
                 btn.on("click", copyToClipboardFunc(codeElem));
             } else if(attempt) {
@@ -413,6 +427,10 @@ function tabidizePastSolutions(liElem) {
 
 jQuery(document).arrive('div.list-item.kata', {existing: true}, function() {
     kataAppeared(this);
+});
+
+jQuery(document).arrive('div.language-selector', {existing: true}, function() {
+    highlightDropdownLangs(this);
 });
 
 jQuery(document).arrive('form.search.mbx', {existing: true}, function() {
