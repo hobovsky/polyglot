@@ -24,9 +24,6 @@ HOW TO USE IT?
  - When you filter kata search results by a language of your choice,
    additional filter option appears which lets you see which katas
    you have or haven't completed in this language.
- - You can navigate to "Site Events" page from the profile menu.
- - Kata and solution IDs in "Site Events" page are resolved into
-   links to their targets, where possible.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
@@ -50,8 +47,6 @@ KNOWN ISSUES
  - Sometimes search results may contain duplicated pages.
  - Selectors, hooks and listeners used are so inefficient that your local power
    plant probably doubles its coal consumption.
- - Some IDs on "Site Events" page cannot be resolved into proper links due to
-   a CW bug with solutions not being correctly associated with the solving user.
 
 
 WHAT CAN I DO WITH THE SCRIPT?
