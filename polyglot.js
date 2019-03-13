@@ -38,9 +38,6 @@ HOW TO USE IT?
  - When you filter kata search results by a language of your choice,
    additional filter option appears which lets you see which katas
    you have or haven't completed in this language.
- - You can navigate to "Site Events" page from the profile menu.
- - Kata and solution IDs in "Site Events" page are resolved into
-   links to their targets, where possible.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
@@ -64,9 +61,6 @@ KNOWN ISSUES
  - Sometimes search results may contain duplicated pages.
  - Selectors, hooks and listeners used are so inefficient that your local power
    plant probably doubles its coal consumption.
- - Some IDs on "Site Events" page cannot be resolved into proper links due to
-   a CW bug with solutions not being correctly associated with the solving user.
-
 
 WHAT CAN I DO WITH THE SCRIPT?
 ------------------------------
@@ -133,7 +127,7 @@ function getUserName() {
         let url = jQuery('#header_profile_link').attr('href');
         url = url.split('/');
         userName = url[url.length - 1];
-        console.info('Detcted username: ' + userName);
+        console.info('Detected username: ' + userName);
     }
     return userName;
 }
@@ -153,7 +147,6 @@ function solutionsPageDownloaded(resp) {
         updateSolutions(i);
     }
 }
-
 
 function updateSolutions(pageNo) {
     let url='/api/v1/users/' + getUserName() + '/code-challenges/completed?page=';
@@ -330,206 +323,6 @@ function setUpForm(form) {
     setUpHighlightConfig();
 }
 
-
-
-/********************************
-*           Site Events         *
-*********************************/
-
-function addSiteEvents(menu) {
-    menu = jQuery(menu);
-    let url = menu.children('#header_profile_link').attr('href') + '/site-events';
-    let menuItem = menu.find('div.menu > div.menu-body > ul > li:first');
-    menuItem.after('<li><a href="' + url + '"><i class="icon-moon-info"></i>Site events</a></li>');
-}
-
-let upvotedSolutionsInProgress = false;
-function resolveUpvotedSolutions(cells, name, pageNo=0) {
-    if( (!pageNo && upvotedSolutionsInProgress) || !cells.length || !name || !name.length) return;
-    function upvotedSolutionsDownloaded(resp) {
-        if(resp.readyState !== 4) return;
-        let solutions = jQuery.parseHTML(resp.responseText);
-        if(!pageNo)
-            solutions = jQuery(solutions).find('div.list-item.solutions').toArray();
-        let m = new Map();
-        solutions.forEach((solel) => {
-            solel = jQuery(solel);
-            let kataTitle = solel.find('div.item-title > a').text();
-
-            let links = solel.find('ul.bulleted-text.mbm > li:eq(2) > a');
-            //CW bug causes that some solutions do not have the link :(
-            //if(!links.length)
-            //    console.info('No solutions for ' + kataTitle);
-            links.each((i, link) => {
-                link = jQuery(link);
-                let href = link.attr('href');
-                let chunks = href.split('/');
-                let solutionId = chunks[chunks.length-1];
-                m.set(solutionId, {title: kataTitle, url: href });
-            });
-        });
-        let remaining = [];
-        jQuery(cells).each((i,e) => {
-            let kataId = getEventCellId(e);
-            let kata = m.get(kataId);
-            if(kata) {
-                let resolvedId = '<a href="' + kata.url + '">' + kata.title + '</a>';
-                GM_setValue('glot.eventId.solution.' + kataId, { found: true, resolvedForm: resolvedId});
-                replaceEventCellId(e, resolvedId);
-            } else {
-                remaining.push(e);
-            }
-        });
-        let hasMore = solutions.length && remaining.length;
-        if(hasMore) {
-            resolveUpvotedSolutions(remaining, name, pageNo+1);
-        } else {
-            remaining.forEach(e => {
-                let solutionId = getEventCellId(e);
-                GM_setValue('glot.eventId.solution.' + solutionId, { found: false });
-            });
-            upvotedSolutionsInProgress = false;
-        }
-    }
-
-    function upvotedSolutionsAborted() { jQuery.notify('Download aborted.', 'info'); };
-    function upvotedSolutionsError() { jQuery.notify('Error!', 'error'); };
-
-    let url='/users/' + name + '/completed_solutions?page=' + pageNo;
-    let opts = {
-        method: 'GET',
-        url: url,
-        onreadystatechange: upvotedSolutionsDownloaded,
-        onabort: upvotedSolutionsAborted,
-        onerror: upvotedSolutionsError,
-        headers: {
-            referer: 'https://www.codewars.com/users/' + name + '/completed_solutions',
-            accept: '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'en-US,en;q=0.9',
-            'x-requested-with': 'XMLHttpRequest'
-        }
-    };
-    GM_xmlhttpRequest(opts);
-    upvotedSolutionsInProgress = true;
-    jQuery.notify('Downloading upvoted solutions...', 'info');
-}
-
-function getEventCellId(cellElem) {
-    return cellElem.childNodes[2].textContent.split(' ')[1];
-}
-
-function replaceEventCellId(cellElem, resolvedIdReplacement) {
-    let idElem = jQuery(cellElem.childNodes[2]);
-    let idElemText = idElem.text();
-    idElem[0].textContent = idElemText.split(' ')[0] + ' ';
-    idElem.after(resolvedIdReplacement);
-}
-
-let upvotedKataInProgress = false;
-function resolveUpvotedKata(cells, name) {
-
-    if(upvotedKataInProgress || !cells.length || !name || !name.length) return;
-
-    function authoredChallengesDownloaded(resp) {
-        if(resp.readyState !== 4) return;
-        let cwResp = resp.response;
-        let m = new Map();
-        cwResp.data.forEach(kata => m.set(kata.id, kata));
-        cells.each((e, i) => {
-            let kataId = getEventCellId(e);
-            let kata = m.get(kataId);
-            if(kata) {
-                let resolvedId = '<a href="https://www.codewars.com/kata/' + kata.id + '">' + kata.name + '</a>';
-                GM_setValue('glot.eventId.kata.' + kataId, { found: true, resolvedForm: resolvedId});
-                replaceEventCellId(e, resolvedId);
-            } else {
-                GM_setValue('glot.eventId.kata.' + kataId, { found: false });
-            }
-        });
-
-        upvotedKataInProgress = false;
-    }
-
-    function authoredChallengesAborted() { jQuery.notify('Download aborted.', 'info'); };
-    function authoredChallengesError() { jQuery.notify('Error!', 'error'); };
-
-    let url='/api/v1/users/' + name + '/code-challenges/authored';
-    let opts = {
-        method: 'GET',
-        url: url,
-        onreadystatechange: authoredChallengesDownloaded,
-        onabort: authoredChallengesAborted,
-        onerror: authoredChallengesError,
-        responseType: 'json'
-    };
-    GM_xmlhttpRequest(opts);
-    upvotedKataInProgress = true;
-    jQuery.notify('Downloading authored challenges...', 'info');
-}
-
-let resolveIdsStart = function(kataCells, solutionCells) {
-
-    return function() {
-        if(upvotedKataInProgress && upvotedSolutionsInProgress) return;
-
-        let msg = "This feature is still under development.\nIt will take a long time, fetch a ton of data and grind terribly through the CW database.\n\nDo you want to continue?";
-        if(!confirm(msg))
-            return;
-
-        let name = getUserName();
-        let banner = jQuery('div.leaderboard').prevAll('h4:last').text();
-        if(banner && banner.startsWith('Site events history for')) {
-            let pieces = banner.split(' ');
-            name = pieces[pieces.length - 1];
-        }
-
-        resolveUpvotedKata(kataCells, name);
-        resolveUpvotedSolutions(solutionCells, name);
-    }
-}
-
-function decorateSiteEvents(alertBox) {
-
-    let rows = jQuery('div.leaderboard > table > tbody > tr');
-    let idCells = rows.find('td:first');
-    function idHeaderIs(e, header) { return e.childNodes && e.childNodes.length && e.childNodes[0].textContent && e.childNodes[0].textContent === header; };
-    //fill out known IDs first
-    let kataCells = idCells.filter((i,e) => idHeaderIs(e, 'Authored code challenge up voted')).toArray();
-    let solutionCells = idCells.filter((i,e) => idHeaderIs(e, 'Code challenge answer up voted')).toArray();
-
-    let unresolvedKata = [];
-    kataCells.forEach((e, i) => {
-        let kataId = getEventCellId(e);
-        let resolved = GM_getValue('glot.eventId.kata.' + kataId);
-        if(resolved) {
-            if(resolved.found) {
-                replaceEventCellId(e, resolved.resolvedForm);
-            }
-        } else {
-            unresolvedKata.push(e);
-        }
-    });
-
-    let unresolvedSolutions = [];
-    solutionCells.forEach(e => {
-        let kataId = getEventCellId(e);
-        let resolved = GM_getValue('glot.eventId.solution.' + kataId);
-        if(resolved) {
-            if(resolved.found) {
-                replaceEventCellId(e, resolved.resolvedForm);
-            }
-        } else {
-            unresolvedSolutions.push(e);
-        }
-    });
-
-    if(unresolvedKata.length || unresolvedSolutions.length) {
-        jQuery(alertBox).append('<button type="button" style="margin-left: 10px" id="btn_resolve_ids">Resolve IDs</button>');
-        jQuery('#btn_resolve_ids').on("click", resolveIdsStart(unresolvedKata, unresolvedSolutions));
-    }
-}
-
 /********************************
 *            Clipboard          *
 *********************************/
@@ -608,13 +401,9 @@ function tabidizePastSolutions(liElem) {
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
         langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text() + '</a></li>');
-        //let contentElems = langHeader.nextUntil('h5');
-        //contentElems.wrapAll('<div class="langTab" id="langTab-' + tabIdSerial++ + '"/>');
         langHeader.parent().attr('id', 'langTab-' + tabIdSerial++);
     });
     langs.remove();
-
-    //solutionPanel.children('div.langTab').detach().appendTo(langTabs);
     let tabsPanel = langTabs.tabs();
 }
 
@@ -651,16 +440,6 @@ jQuery(document).arrive('div.list-item.solutions', {existing: true, onceOnly: fa
 
 jQuery(document).arrive('li[data-tab="solutions"]', {existing: true, onceOnly: false}, function() {
     tabidizePastSolutions(this);
-});
-
-jQuery(document).arrive('li.profile-item.has-menu', {existing: true}, function() {
-    addSiteEvents(this);
-});
-
-jQuery(document).arrive('div.alert-box', {existing: true}, function() {
-    if(this.childNodes && this.childNodes.length && this.childNodes[1] && this.childNodes[1].textContent && this.childNodes[1].textContent.startsWith('Too much data')) {
-        decorateSiteEvents(this);
-    }
 });
 
 jQuery(document).arrive('li.is-auto-hidden', {existing: true}, function() {
