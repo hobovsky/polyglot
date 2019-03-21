@@ -8,6 +8,9 @@ WHAI IS IT?
  additional per-language filtering and display capabilities,
  effectively making it easier for you to obtain POLYGLOT badge.
 
+WHERE CAN I DOWNLOAD IT FROM?
+-----------------------------
+ You can get the script [here](https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js).
 
 HOW TO INSTALL IT?
 ------------------
@@ -33,7 +36,6 @@ WHAT FEATURES DOES IT PROVIDE?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - TODO: Auto-update
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.

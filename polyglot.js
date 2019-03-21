@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.1
+// @version 1.3.2
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -24,6 +24,9 @@ WHAI IS IT?
  additional per-language filtering and display capabilities,
  effectively making it easier for you to obtain POLYGLOT badge.
 
+WHERE CAN I DOWNLOAD IT FROM?
+-----------------------------
+ You can get the script here: https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 
 HOW TO INSTALL IT?
 ------------------
