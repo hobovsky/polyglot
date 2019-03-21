@@ -65,7 +65,7 @@ WHAT CAN I DO WITH THE SCRIPT?
 THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
 -------------------------------------------------------------
  I am really sorry if this code hurts your eyes, brain, or feelings
- in any way, but I am not a proffesional HTML developer and each and
+ in any way, but I am not a professional HTML developer and each and
  every technique present here (JavaScript, jQuery, TamperMonkey,
  CW API) I've used for the first time.
 
