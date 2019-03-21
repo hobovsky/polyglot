@@ -1,5 +1,7 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
+// @version 1.3.0
+// @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
 // @grant   GM_setValue
@@ -29,12 +31,13 @@ HOW TO INSTALL IT?
  - Copy&paste the script to your scripts library.
 
 
-HOW TO USE IT?
---------------
- - Go to Solutions tab of your CodeWars profile to let the script
-   fetch/update information about your solutions.
- - From now on, all 'available language' icons should show whether
-   you've completed given kata in some particular language.
+WHAT FEATURES DOES IT PROVIDE?
+------------------------------
+ - All 'available language' icons show whether you've completed
+   given kata in some particular language. Languages are marked
+   also in language selection dropdowns - but first go to Solutions
+   tab of your CodeWars profile to let the script fetch/update information
+   about your solutions.
  - When you filter kata search results by a language of your choice,
    additional filter option appears which lets you see which katas
    you have or haven't completed in this language.
@@ -43,8 +46,10 @@ HOW TO USE IT?
    in a very annoying manner.
  - Contents of "Solutions" and "Past solutions" views are displayed in
    tabs by language.
- - Highlight solved languages in language dropdowns.
- - TODO: Tabbed snippets in kata reference section on translation page.
+ - Leaderboards: "Solved kata is default leaderboard (since "Overall"
+   ranking does not measure anything useful). Also, leaderboards are
+   automatically scrolled to show your score.
+ - TODO: Auto-update
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
@@ -466,4 +471,14 @@ jQuery(document).arrive('li.is-auto-hidden', {existing: true}, function() {
 
 jQuery(document).arrive('code', {existing: true}, function() {
     addCopyButton(this);
+});
+
+jQuery(document).arrive('a[title="Leaders"]', {existing: true}, function() {
+    let elem = jQuery(this);
+    elem.attr('href', '/users/leaderboard/kata');
+});
+
+jQuery(document).arrive('tr.is-current-player', {existing: true}, function() {
+    if(!isElementInViewport(this))
+        this.scrollIntoView();
 });
