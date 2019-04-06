@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.2
+// @version 1.3.3
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -52,7 +52,8 @@ WHAT FEATURES DOES IT PROVIDE?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - TODO: Auto-update
+ - "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
@@ -430,6 +431,45 @@ function tabidizePastSolutions(liElem) {
 }
 
 /********************************
+*          Panel toggles        *
+*********************************/
+
+function decoratePanelToggles() {
+
+    //Kata description
+    {
+        let origDescToggle = jQuery('#show_description');
+        let newDescToggle = origDescToggle.clone();
+        newDescToggle.attr('id', 'glot_' + origDescToggle.attr('id'));
+        origDescToggle.replaceWith(newDescToggle);
+        let elema = newDescToggle.find('> div > a')[0];
+        elema.textContent = 'Show / Hide Kata Description';
+        newDescToggle.click(function() {
+            if(!elema.descriptionMarkdown) {
+                elema.descriptionMarkdown = new App.Controls.MarkdownDisplay("#description",{
+                    language: App.data.activeLanguage
+                });
+                elema.descriptionMarkdown.setMarkdown(App.data.description);
+            }
+            jQuery('#description_panel').slideToggle();
+        });
+    }
+
+    //Test fixture
+    {
+        let origTestsToggle = jQuery('#show_fixture');
+        let newTestsToggle = origTestsToggle.clone();
+        newTestsToggle.attr('id', 'glot_' + origTestsToggle.attr('id'));
+        origTestsToggle.replaceWith(newTestsToggle);
+        let elema = newTestsToggle.find('> div > a')[0];
+        elema.textContent = 'Show / Hide Kata Test Cases';
+        newTestsToggle.click(function() {
+            jQuery('#fixture_panel').slideToggle();
+        });
+    }
+}
+
+/********************************
 *          DOM Listeners        *
 *********************************/
 
@@ -484,4 +524,8 @@ jQuery(document).arrive('a[title="Leaders"]', {existing: true}, function() {
 jQuery(document).arrive('tr.is-current-player', {existing: true}, function() {
     if(!isElementInViewport(this))
         this.scrollIntoView();
+});
+
+jQuery(document).arrive('#show_description', {existing: true}, function() {
+    decoratePanelToggles();
 });
