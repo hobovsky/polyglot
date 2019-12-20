@@ -38,6 +38,8 @@ WHAT FEATURES DOES IT PROVIDE?
    automatically scrolled to show your score.
  - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
    page.
+ - "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
