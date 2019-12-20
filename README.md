@@ -36,6 +36,8 @@ WHAT FEATURES DOES IT PROVIDE?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
+ - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
+   page.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.

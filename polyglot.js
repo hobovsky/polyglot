@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.3
+// @version 1.3.4
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -54,6 +54,8 @@ WHAT FEATURES DOES IT PROVIDE?
    automatically scrolled to show your score.
  - "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
    now and can be collapsed after once expanded.
+ - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
+   page.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
@@ -199,7 +201,7 @@ function highlightDropdownLangs(divLangSelector) {
 
     for(lang of langs) {
         let langElem = itemByLang.get(lang);
-        jQuery(langElem).toggleClass('dimmed');
+        jQuery(langElem).addClass('dimmed');
     }
 }
 
@@ -470,6 +472,44 @@ function decoratePanelToggles() {
 }
 
 /********************************
+*        Translations tab       *
+*********************************/
+function addTranslationsTab(elem) {
+
+    let title = jQuery("h1.page-title").text();
+    if(title === "Kata Translations") {
+        addKataTabs(jQuery('div.flex-row.ptm'));
+        return;
+    } else if(title !== "Kata")
+       return;
+
+    let path = window.location.pathname.split('/').slice(0,3);
+    path = path.join('/');
+
+    newUrl = new URL(window.location);
+    newUrl.pathname = path;
+
+    elem.append('<dd><a href="' + newUrl.href + '/translations"><i class="icon-moon-translation "></i>Translations</a></dd>');
+}
+
+function addKataTabs(elem) {
+
+    let path = window.location.pathname.split('/').slice(0,3);
+    path = path.join('/');
+
+    newUrl = new URL(window.location);
+    newUrl.pathname = path;
+
+    elem.prepend('<div class="tabs is-relative"><dl class="tabs is-contained mbm">' +
+                     '<dd><a href="'+ newUrl.href +'">Details</a></dd>' +
+                     '<dd><a href="' + newUrl.href + '/solutions" id="solutions"><i class="icon-moon-bullseye "></i>Solutions</a></dd>' +
+                     '<dd><a href="' + newUrl.href + '/forks"><i class="icon-moon-forked "></i>Forks</a></dd>' +
+                     '<dd><a href="' + newUrl.href + '/discuss"><i class="icon-moon-comments "></i>Discourse</a></dd>' +
+                     '<dd class="is-active"><a><i class="icon-moon-translation "></i>Translations</a></dd>' +
+                 '</dl></div>');
+}
+
+/********************************
 *          DOM Listeners        *
 *********************************/
 
@@ -528,4 +568,9 @@ jQuery(document).arrive('tr.is-current-player', {existing: true}, function() {
 
 jQuery(document).arrive('#show_description', {existing: true}, function() {
     decoratePanelToggles();
+});
+
+jQuery(document).arrive('#play_next_btn', {existing: true, onceOnly: false}, function() {
+    let elem = jQuery('dl.tabs');
+    addTranslationsTab(elem);
 });
