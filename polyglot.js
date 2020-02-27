@@ -518,7 +518,7 @@ jQuery(document).arrive('div.list-item.kata', {existing: true}, function() {
     kataAppeared(this);
 });
 
-jQuery(document).arrive('div.language-selector', {existing: true}, function() {
+jQuery(document).arrive('#language_dd', {existing: true}, function() {
     highlightDropdownLangs(this);
 });
 
