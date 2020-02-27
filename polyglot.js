@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.5
+// @version 1.3.6
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -116,7 +116,7 @@ function isElementInViewport (el) {
         el = el[0];
     }
 
-    var rect = el.getBoundingClientRect();
+    let rect = el.getBoundingClientRect();
     let wnd = jQuery(window);
     return rect.top >= 0 && rect.left >= 0 && rect.bottom <= wnd.height() && rect.right <= wnd.width();
 }
@@ -320,7 +320,7 @@ function reHighlight() {
 *********************************/
 
 function setUpHighlightConfig() {
-    let form = jQuery('form.search.mbx');
+    let form = jQuery('#filters');
     highlightLang = form.find('#language_filter>option:selected').val();
     if(!highlightLang || highlightLang === '' || highlightLang === 'my-languages') {
         highlightConfig = 'all';
@@ -522,10 +522,10 @@ jQuery(document).arrive('#language_dd', {existing: true}, function() {
     highlightDropdownLangs(this);
 });
 
-jQuery(document).arrive('form.search.mbx', {existing: true}, function() {
+jQuery(document).arrive('#filters', {existing: true}, function() {
     setUpForm(this);
 });
-jQuery(document).leave('form.search.mbx', {existing: true}, function() {
+jQuery(document).leave('#filters', {existing: true}, function() {
     highlightConfig = 'all';
     highlightLang = '';
 });
