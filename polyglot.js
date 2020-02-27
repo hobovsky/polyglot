@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.4
+// @version 1.3.5
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -183,7 +183,7 @@ function updateSolutions(pageNo) {
 }
 
 function dimSolved(elem) {
-    let id = elem.id || jQuery(elem).children('div.eight.columns.alpha').children('div.info-row.code-challenge').attr('data-id');
+    let id = elem.id || jQuery(elem).children('div.flex.flex-col').children('div.w-full').children('div.mt-1.mb-3').attr('data-id');
     if(!id) return;
     let langs = GM_getValue('glot.katalangs.' + id, []);
     for(lang of langs) {
@@ -193,7 +193,8 @@ function dimSolved(elem) {
 
 function highlightDropdownLangs(divLangSelector) {
     divLangSelector = jQuery(divLangSelector);
-    let kataId = divLangSelector.parents().prev().children('div.info-row.code-challenge').data('id');
+    let kataHref = divLangSelector.find('dl>dd').first().data('href');
+    let kataId = kataHref.split('/')[2];
     let langs = GM_getValue('glot.katalangs.' + kataId, []);
 
     let itemByLang = new Map();
