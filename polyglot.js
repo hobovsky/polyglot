@@ -15,7 +15,6 @@
 // @require https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
 // ==/UserScript==
 
-
 /****************************************************************
 
 WHAI IS IT?
@@ -104,14 +103,9 @@ CREDITS
 
 $.noConflict();
 
-jQuery("head").append (
-    '<link '
-  + 'href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/dark-hive/jquery-ui.min.css" '
-  + 'rel="stylesheet" type="text/css">'
-);
+jQuery("head").append("<link " + 'href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/dark-hive/jquery-ui.min.css" ' + 'rel="stylesheet" type="text/css">');
 
-function isElementInViewport (el) {
-
+function isElementInViewport(el) {
     if (typeof jQuery === "function" && el instanceof jQuery) {
         el = el[0];
     }
@@ -121,47 +115,45 @@ function isElementInViewport (el) {
     return rect.top >= 0 && rect.left >= 0 && rect.bottom <= wnd.height() && rect.right <= wnd.width();
 }
 
-
 /********************************
-*          Solved languages     *
-*********************************/
+ *          Solved languages     *
+ *********************************/
 
 function store(data) {
-    for(kata of data) {
-        GM_setValue('glot.katalangs.' + kata.id, kata.completedLanguages);
+    for (kata of data) {
+        GM_setValue("glot.katalangs." + kata.id, kata.completedLanguages);
     }
 }
 
 let fetchInProgress = false;
 let userName = null;
 function getUserName() {
-    if(!userName) {
-        let url = jQuery('#header_profile_link').attr('href');
-        url = url.split('/');
+    if (!userName) {
+        let url = jQuery("#header_profile_link").attr("href");
+        url = url.split("/");
         userName = url[url.length - 1];
-        console.info('Detected username: ' + userName);
+        console.info("Detected username: " + userName);
     }
     return userName;
 }
 
 function solutionsPageDownloaded(resp) {
-    if(resp.readyState !== 4) return;
-    resp.context = (resp.context || 0);
+    if (resp.readyState !== 4) return;
+    resp.context = resp.context || 0;
     let cwResp = resp.response;
     store(cwResp.data);
     jQuery.notify("Downloaded page " + (resp.context + 1) + " of " + cwResp.totalPages, "success");
-    if(resp.context) {
-        if(resp.context+1 == cwResp.totalPages)
-            fetchInProgress = false;
+    if (resp.context) {
+        if (resp.context + 1 == cwResp.totalPages) fetchInProgress = false;
         return;
     }
-    for(let i=1; i<cwResp.totalPages; ++i) {
+    for (let i = 1; i < cwResp.totalPages; ++i) {
         updateSolutions(i);
     }
 }
 
 function updateSolutions(pageNo) {
-    let url='/api/v1/users/' + getUserName() + '/code-challenges/completed?page=';
+    let url = "/api/v1/users/" + getUserName() + "/code-challenges/completed?page=";
     function fetchAborted() {
         fetchInProgress = false;
         jQuery.notify("Fetch aborted.", "info");
@@ -171,78 +163,90 @@ function updateSolutions(pageNo) {
         jQuery.notify("ERROR!", "error");
     }
     let opts = {
-        method: 'GET',
+        method: "GET",
         url: url + (pageNo || 0),
         onreadystatechange: solutionsPageDownloaded,
         onabort: fetchAborted,
         onerror: fetchError,
-        context: (pageNo || 0),
-        responseType: 'json'
+        context: pageNo || 0,
+        responseType: "json"
     };
     GM_xmlhttpRequest(opts);
 }
 
 function dimSolved(elem) {
-    let id = elem.id || jQuery(elem).children('div.flex.flex-col').children('div.w-full').children('div.mt-1.mb-3').attr('data-id');
-    if(!id) return;
-    let langs = GM_getValue('glot.katalangs.' + id, []);
-    for(lang of langs) {
-        jQuery(elem).find("a[data-language='" + lang + "']").children("div").children("i").addClass('dimmed');
+    let id =
+        elem.id ||
+        jQuery(elem)
+            .children("div.flex.flex-col")
+            .children("div.w-full")
+            .children("div.mt-1.mb-3")
+            .attr("data-id");
+    if (!id) return;
+    let langs = GM_getValue("glot.katalangs." + id, []);
+    for (lang of langs) {
+        jQuery(elem)
+            .find("a[data-language='" + lang + "']")
+            .children("div")
+            .children("i")
+            .addClass("dimmed");
     }
 }
 
 function highlightDropdownLangs(divLangSelector) {
     divLangSelector = jQuery(divLangSelector);
-    let kataHref = divLangSelector.find('dl>dd').first().data('href');
-    let kataId = kataHref.split('/')[2];
-    let langs = GM_getValue('glot.katalangs.' + kataId, []);
+    let kataHref = divLangSelector
+        .find("dl>dd")
+        .first()
+        .data("href");
+    let kataId = kataHref.split("/")[2];
+    let langs = GM_getValue("glot.katalangs." + kataId, []);
 
     let itemByLang = new Map();
-    divLangSelector.find('dl>dd[data-value]').each((i,e) => itemByLang.set(e.dataset.value, e));
+    divLangSelector.find("dl>dd[data-value]").each((i, e) => itemByLang.set(e.dataset.value, e));
 
-    for(lang of langs) {
+    for (lang of langs) {
         let langElem = itemByLang.get(lang);
-        jQuery(langElem).addClass('dimmed');
+        jQuery(langElem).addClass("dimmed");
     }
 }
 
 /********************************
-*           Search result       *
-*********************************/
+ *           Search result       *
+ *********************************/
 
 let topUpInProgress = false;
 function toppedUp(resp) {
-    if(resp.readyState !== 4) return;
+    if (resp.readyState !== 4) return;
     topUpInProgress = false;
     let cwResp = resp.responseText;
     let toAppend = jQuery.parseHTML(cwResp);
-    let kataList = jQuery(toAppend).find('div.list-item.kata');
-    if(!kataList.length) {
+    let kataList = jQuery(toAppend).find("div.list-item.kata");
+    if (!kataList.length) {
         jQuery.notify("No more katas available.", "info");
         return;
     }
-    let marker = jQuery('div.js-infinite-marker');
+    let marker = jQuery("div.js-infinite-marker");
     marker.before(kataList);
     let vsb = isElementInViewport(marker);
-    if(vsb) {
+    if (vsb) {
         topUpList(marker);
     }
 }
 
 function topUpList(marker) {
-    if(topUpInProgress)
-        return;
+    if (topUpInProgress) return;
 
-    let nextPage = marker.data('page');
+    let nextPage = marker.data("page");
     let ub = new App.UriBuilder();
-    ub.params.page= nextPage;
-    marker.data('page', nextPage+1);
-    marker.attr('data-page', nextPage+1);
+    ub.params.page = nextPage;
+    marker.data("page", nextPage + 1);
+    marker.attr("data-page", nextPage + 1);
     let url = ub.build();
     let opts = {
-        method: 'GET',
+        method: "GET",
         url: url,
-        onreadystatechange: toppedUp,
+        onreadystatechange: toppedUp
     };
     GM_xmlhttpRequest(opts);
     jQuery.notify("Downloading page " + nextPage + " of available katas...", "info");
@@ -251,11 +255,10 @@ function topUpList(marker) {
 
 function removeFromSearch(kata) {
     jQuery(kata).hide();
-    let marker = jQuery('div.js-infinite-marker');
-    if(!marker || !marker.length)
-        return;
+    let marker = jQuery("div.js-infinite-marker");
+    if (!marker || !marker.length) return;
     let vsb = isElementInViewport(marker);
-    if(vsb) {
+    if (vsb) {
         topUpList(marker);
     }
 }
@@ -263,25 +266,23 @@ function addToSearch(kata) {
     jQuery(kata).show();
 }
 
-let highlightConfig = 'all';
-let highlightLang = '';
+let highlightConfig = "all";
+let highlightLang = "";
 function shouldHighlight(elem) {
+    if (!elem.id || !highlightConfig || highlightConfig == "all" || !highlightLang || highlightLang == "" || highlightLang === "my-languages") return true;
 
-    if(!elem.id || !highlightConfig || highlightConfig == 'all' || !highlightLang || highlightLang == '' || highlightLang === 'my-languages') return true;
+    let langs = GM_getValue("glot.katalangs." + elem.id, []);
 
-    let langs = GM_getValue('glot.katalangs.' + elem.id, []);
-
-    if(highlightConfig == 'not_solved') {
+    if (highlightConfig == "not_solved") {
         return !langs.some(lg => lg == highlightLang);
-    } else if(highlightConfig == 'solved') {
+    } else if (highlightConfig == "solved") {
         return langs.some(lg => lg == highlightLang);
     }
     console.warn("Unrecognized highlightConfig: " + highlightConfig);
     return false;
 }
 
-let css =
-`
+let css = `
 .dimmed {
   -webkit-filter: grayscale(0.8) blur(1px);
 }
@@ -297,195 +298,188 @@ let css =
 GM_addStyle(css);
 
 function kataAppeared(elem) {
-    if(shouldHighlight(elem))
-        addToSearch(elem);
-    else
-        removeFromSearch(elem);
+    if (shouldHighlight(elem)) addToSearch(elem);
+    else removeFromSearch(elem);
 
     dimSolved(elem);
 }
 
 function reHighlight() {
-    jQuery('div.list-item.kata').each(
-        function() {
-            kataAppeared(this);
-        }
-    );
+    jQuery("div.list-item.kata").each(function() {
+        kataAppeared(this);
+    });
 }
 
-
-
 /********************************
-*           Filter form         *
-*********************************/
+ *           Filter form         *
+ *********************************/
 
 function setUpHighlightConfig() {
-    let form = jQuery('#filters');
-    highlightLang = form.find('#language_filter>option:selected').val();
-    if(!highlightLang || highlightLang === '' || highlightLang === 'my-languages') {
-        highlightConfig = 'all';
-        highlightLang = '';
+    let form = jQuery("#filters");
+    highlightLang = form.find("#language_filter>option:selected").val();
+    if (!highlightLang || highlightLang === "" || highlightLang === "my-languages") {
+        highlightConfig = "all";
+        highlightLang = "";
         return;
     }
-    highlightConfig = jQuery('#cmbHighlight>option:selected').val();
+    highlightConfig = jQuery("#cmbHighlight>option:selected").val();
 }
 
 function setUpForm(form) {
     form = jQuery(form);
-    form.find('select').change(setUpHighlightConfig);
+    form.find("select").change(setUpHighlightConfig);
 
-    let sel = form.find('#language_filter>option:selected');
+    let sel = form.find("#language_filter>option:selected");
     let langVal = sel.val();
     let lang = sel.text();
-    if(lang && langVal !== '' && langVal !== 'my-languages') {
-        jQuery('div.list-item.kata:first').before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + '</option><option value = "not_solved">Show katas I\'ven\'t solved in ' + lang + '</option></select></form>');
-        let cmbHc = jQuery('#cmbHighlight')
+    if (lang && langVal !== "" && langVal !== "my-languages") {
+        jQuery("div.list-item.kata:first").before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + "</option><option value = \"not_solved\">Show katas I'ven't solved in " + lang + "</option></select></form>");
+        let cmbHc = jQuery("#cmbHighlight");
         cmbHc.change(setUpHighlightConfig);
         cmbHc.change(reHighlight);
-        if(highlightConfig == 'solved' || highlightConfig == 'not_solved')
-            cmbHc.val(highlightConfig);
+        if (highlightConfig == "solved" || highlightConfig == "not_solved") cmbHc.val(highlightConfig);
     }
 
     setUpHighlightConfig();
 }
 
 /********************************
-*            Clipboard          *
-*********************************/
+ *            Clipboard          *
+ *********************************/
 
-const btnCaption = 'Copy to clipboard';
+const btnCaption = "Copy to clipboard";
 function copyToClipboardFunc(codeElem) {
-
     return function() {
         let code = codeElem.text().substring(btnCaption.length);
-        GM_setClipboard(code, 'text');
-        jQuery.notify(code.length + ' characters copied to clipboard.', 'info');
+        GM_setClipboard(code, "text");
+        jQuery.notify(code.length + " characters copied to clipboard.", "info");
     };
 }
 
-function addCopyButton(codeElem, attempt=10) {
-
+function addCopyButton(codeElem, attempt = 10) {
     //TODO: syntax highlighter treats buttons added by me as regular code which should
     //be highlighted, and destroys them if they are added before highlighting is completed.
     //To avoid such situation, I wait 1 second to let highlighter complete its job,
     //and add button after this time elapses. However, better solution might be just to listen
     //for removal of the buton and simply re-add it?
-    setTimeout( function() {
+    setTimeout(function() {
         codeElem = jQuery(codeElem);
 
-        if(codeElem.parents('#description').length)
-            return;
+        if (codeElem.parents("#description").length) return;
 
-        if(codeElem.parent('pre').length && !codeElem.children('button.btnCopy').length) {
-
-            if(codeElem.children('span').length) {
+        if (codeElem.parent("pre").length && !codeElem.children("button.btnCopy").length) {
+            if (codeElem.children("span").length) {
                 codeElem.prepend("<button class='btnCopy' type='button'>" + btnCaption + "</button>");
-                let btn = codeElem.children('button').first();
+                let btn = codeElem.children("button").first();
                 btn.on("click", copyToClipboardFunc(codeElem));
-            } else if(attempt) {
-                console.info('Highlight delay...');
-                addCopyButton(codeElem, attempt-1);
+            } else if (attempt) {
+                console.info("Highlight delay...");
+                addCopyButton(codeElem, attempt - 1);
             }
         }
     }, 1000);
 }
 
 /********************************
-*        Tabbed Languages       *
-*********************************/
+ *        Tabbed Languages       *
+ *********************************/
 let tabIdSerial = 1;
 function tabidizeByLanguage(solutionPanel) {
-
     solutionPanel = jQuery(solutionPanel);
-    let kataTitle = solutionPanel.children('div.item-title:first').first();
+    let kataTitle = solutionPanel.children("div.item-title:first").first();
     kataTitle.after('<div class="langTabs"><ul class="tabsList"></ul></div>');
-    let langTabsList = kataTitle.next('div.langTabs').children('ul.tabsList:first').first();
+    let langTabsList = kataTitle
+        .next("div.langTabs")
+        .children("ul.tabsList:first")
+        .first();
 
-    let langs = solutionPanel.children('h6');
+    let langs = solutionPanel.children("h6");
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
-        langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text().slice(0, -1) + '</a></li>');
-        let contentElems = langHeader.nextUntil('h6');
+        langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text().slice(0, -1) + "</a></li>");
+        let contentElems = langHeader.nextUntil("h6");
         contentElems.wrapAll('<div class="langTab" id="langTab-' + tabIdSerial++ + '"/>');
     });
     langs.remove();
-    let langTabs = kataTitle.next('div.langTabs');
-    solutionPanel.children('div.langTab').detach().appendTo(langTabs);
+    let langTabs = kataTitle.next("div.langTabs");
+    solutionPanel
+        .children("div.langTab")
+        .detach()
+        .appendTo(langTabs);
     let tabsPanel = langTabs.tabs();
 }
 
 function tabidizePastSolutions(liElem) {
-    let solutionPanel = jQuery(liElem).children('div:first').first();
+    let solutionPanel = jQuery(liElem)
+        .children("div:first")
+        .first();
 
     let langDivs = solutionPanel.children();
     langDivs.wrapAll('<div class="langTabs"/>');
-    let langTabs = solutionPanel.children('div.langTabs').first();
+    let langTabs = solutionPanel.children("div.langTabs").first();
     langTabs.prepend('<ul class="tabsList"></ul>');
-    let langTabsList = langTabs.children('ul.tabsList:first').first();
+    let langTabsList = langTabs.children("ul.tabsList:first").first();
 
-    let langs = langDivs.children('h5');
+    let langs = langDivs.children("h5");
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
-        langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text() + '</a></li>');
-        langHeader.parent().attr('id', 'langTab-' + tabIdSerial++);
+        langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text() + "</a></li>");
+        langHeader.parent().attr("id", "langTab-" + tabIdSerial++);
     });
     langs.remove();
     let tabsPanel = langTabs.tabs();
 }
 
 /********************************
-*          Panel toggles        *
-*********************************/
+ *          Panel toggles        *
+ *********************************/
 
 function decoratePanelToggles() {
-
     //Kata description
     {
-        let origDescToggle = jQuery('#show_description');
+        let origDescToggle = jQuery("#show_description");
         let newDescToggle = origDescToggle.clone();
-        newDescToggle.attr('id', 'glot_' + origDescToggle.attr('id'));
+        newDescToggle.attr("id", "glot_" + origDescToggle.attr("id"));
         origDescToggle.replaceWith(newDescToggle);
-        let elema = newDescToggle.find('> div > a')[0];
-        elema.textContent = 'Show / Hide Kata Description';
+        let elema = newDescToggle.find("> div > a")[0];
+        elema.textContent = "Show / Hide Kata Description";
         newDescToggle.click(function() {
-            if(!elema.descriptionMarkdown) {
-                elema.descriptionMarkdown = new App.Controls.MarkdownDisplay("#description",{
+            if (!elema.descriptionMarkdown) {
+                elema.descriptionMarkdown = new App.Controls.MarkdownDisplay("#description", {
                     language: App.data.activeLanguage
                 });
                 elema.descriptionMarkdown.setMarkdown(App.data.description);
             }
-            jQuery('#description_panel').slideToggle();
+            jQuery("#description_panel").slideToggle();
         });
     }
 
     //Test fixture
     {
-        let origTestsToggle = jQuery('#show_fixture');
+        let origTestsToggle = jQuery("#show_fixture");
         let newTestsToggle = origTestsToggle.clone();
-        newTestsToggle.attr('id', 'glot_' + origTestsToggle.attr('id'));
+        newTestsToggle.attr("id", "glot_" + origTestsToggle.attr("id"));
         origTestsToggle.replaceWith(newTestsToggle);
-        let elema = newTestsToggle.find('> div > a')[0];
-        elema.textContent = 'Show / Hide Kata Test Cases';
+        let elema = newTestsToggle.find("> div > a")[0];
+        elema.textContent = "Show / Hide Kata Test Cases";
         newTestsToggle.click(function() {
-            jQuery('#fixture_panel').slideToggle();
+            jQuery("#fixture_panel").slideToggle();
         });
     }
 }
 
 /********************************
-*        Translations tab       *
-*********************************/
+ *        Translations tab       *
+ *********************************/
 function addTranslationsTab(elem) {
-
     let title = jQuery("h1.page-title").text();
-    if(title === "Kata Translations") {
-        addKataTabs(jQuery('div.flex-row.ptm'));
+    if (title === "Kata Translations") {
+        addKataTabs(jQuery("div.flex-row.ptm"));
         return;
-    } else if(title !== "Kata")
-       return;
+    } else if (title !== "Kata") return;
 
-    let path = window.location.pathname.split('/').slice(0,3);
-    path = path.join('/');
+    let path = window.location.pathname.split("/").slice(0, 3);
+    path = path.join("/");
 
     newUrl = new URL(window.location);
     newUrl.pathname = path;
@@ -494,84 +488,76 @@ function addTranslationsTab(elem) {
 }
 
 function addKataTabs(elem) {
-
-    let path = window.location.pathname.split('/').slice(0,3);
-    path = path.join('/');
+    let path = window.location.pathname.split("/").slice(0, 3);
+    path = path.join("/");
 
     newUrl = new URL(window.location);
     newUrl.pathname = path;
 
-    elem.prepend('<div class="tabs is-relative"><dl class="tabs is-contained mbm">' +
-                     '<dd><a href="'+ newUrl.href +'">Details</a></dd>' +
-                     '<dd><a href="' + newUrl.href + '/solutions" id="solutions"><i class="icon-moon-bullseye "></i>Solutions</a></dd>' +
-                     '<dd><a href="' + newUrl.href + '/forks"><i class="icon-moon-forked "></i>Forks</a></dd>' +
-                     '<dd><a href="' + newUrl.href + '/discuss"><i class="icon-moon-comments "></i>Discourse</a></dd>' +
-                     '<dd class="is-active"><a><i class="icon-moon-translation "></i>Translations</a></dd>' +
-                 '</dl></div>');
+    elem.prepend('<div class="tabs is-relative"><dl class="tabs is-contained mbm">' + '<dd><a href="' + newUrl.href + '">Details</a></dd>' + '<dd><a href="' + newUrl.href + '/solutions" id="solutions"><i class="icon-moon-bullseye "></i>Solutions</a></dd>' + '<dd><a href="' + newUrl.href + '/forks"><i class="icon-moon-forked "></i>Forks</a></dd>' + '<dd><a href="' + newUrl.href + '/discuss"><i class="icon-moon-comments "></i>Discourse</a></dd>' + '<dd class="is-active"><a><i class="icon-moon-translation "></i>Translations</a></dd>' + "</dl></div>");
 }
 
 /********************************
-*          DOM Listeners        *
-*********************************/
+ *          DOM Listeners        *
+ *********************************/
 
-jQuery(document).arrive('div.list-item.kata', {existing: true}, function() {
+jQuery(document).arrive("div.list-item.kata", { existing: true }, function() {
     kataAppeared(this);
 });
 
-jQuery(document).arrive('#language_dd', {existing: true}, function() {
+jQuery(document).arrive("#language_dd", { existing: true }, function() {
     highlightDropdownLangs(this);
 });
 
-jQuery(document).arrive('#filters', {existing: true}, function() {
+jQuery(document).arrive("#filters", { existing: true }, function() {
     setUpForm(this);
 });
-jQuery(document).leave('#filters', {existing: true}, function() {
-    highlightConfig = 'all';
-    highlightLang = '';
+jQuery(document).leave("#filters", { existing: true }, function() {
+    highlightConfig = "all";
+    highlightLang = "";
 });
 
-jQuery(document).arrive('div.list-item.solutions:first-child', {existing: true}, function() {
-    if(!fetchInProgress) {
+jQuery(document).arrive("div.list-item.solutions:first-child", { existing: true }, function() {
+    if (!fetchInProgress) {
         fetchInProgress = true;
         jQuery.notify("Fetching solved languages...", "info");
 
         let tabs = jQuery(this.parentElement.parentElement.previousElementSibling.firstElementChild);
-        let href = tabs.find('dd.is-active > a').attr('href');
+        let href = tabs.find("dd.is-active > a").attr("href");
         updateSolutions(0);
     }
 });
 
-jQuery(document).arrive('div.list-item.solutions', {existing: true, onceOnly: false}, function() {
+jQuery(document).arrive("div.list-item.solutions", { existing: true, onceOnly: false }, function() {
     tabidizeByLanguage(this);
 });
 
-jQuery(document).arrive('li[data-tab="solutions"]', {existing: true, onceOnly: false}, function() {
+jQuery(document).arrive('li[data-tab="solutions"]', { existing: true, onceOnly: false }, function() {
     tabidizePastSolutions(this);
 });
 
-jQuery(document).arrive('li.is-auto-hidden', {existing: true}, function() {
-    jQuery(this).css('opacity', '1');
+jQuery(document).arrive("li.is-auto-hidden", { existing: true }, function() {
+    jQuery(this).css("opacity", "1");
 });
 
-jQuery(document).arrive('code', {existing: true}, function() {
+jQuery(document).arrive("code", { existing: true }, function() {
     addCopyButton(this);
 });
 
-jQuery(document).arrive('a[title="Leaders"]', {existing: true}, function() {
+jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
     let elem = jQuery(this);
-    elem.attr('href', '/users/leaderboard/kata');
+    elem.attr("href", "/users/leaderboard/kata");
 });
 
-jQuery(document).arrive('tr.is-current-player', {existing: true}, function() {
-    if(!isElementInViewport(this))
-        this.scrollIntoView();
+jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
+    if (!isElementInViewport(this)) this.scrollIntoView();
 });
 
-jQuery(document).arrive('#show_description', {existing: true}, function() {
+jQuery(document).arrive("#show_description", { existing: true }, function() {
     decoratePanelToggles();
 });
 
-jQuery(document).arrive('#play_next_btn', {existing: true, onceOnly: false}, function() {
-    let elem = jQuery('dl.tabs');
+jQuery(document).arrive("#play_next_btn", { existing: true, onceOnly: false }, function() {
+    let elem = jQuery("dl.tabs");
     addTranslationsTab(elem);
 });
