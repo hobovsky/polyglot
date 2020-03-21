@@ -16,23 +16,18 @@
 // ==/UserScript==
 
 /****************************************************************
-
 WHAI IS IT?
 -----------
  This piece of code is a Tampermonkey user script which provides some
  additional per-language filtering and display capabilities,
  effectively making it easier for you to obtain POLYGLOT badge.
-
 WHERE CAN I DOWNLOAD IT FROM?
 -----------------------------
  You can get the script here: https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
-
 HOW TO INSTALL IT?
 ------------------
  - Install Tampermonkey extension for your browser,
  - Copy&paste the script to your scripts library.
-
-
 WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
  - All 'available language' icons show whether you've completed
@@ -58,12 +53,9 @@ WHAT FEATURES DOES IT PROVIDE?
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
-
 HOW TO UNINSTALL IT?
 --------------------
  I haven't checked.
-
-
 KNOWN ISSUES
 ------------
  - Yes.
@@ -72,7 +64,6 @@ KNOWN ISSUES
  - Sometimes search results may contain duplicated pages.
  - Selectors, hooks and listeners used are so inefficient that your local power
    plant probably doubles its coal consumption.
-
 WHAT CAN I DO WITH THE SCRIPT?
 ------------------------------
  - You are allowed to use it, unless someone authoritative (CW staff?) says you can't.
@@ -81,16 +72,12 @@ WHAT CAN I DO WITH THE SCRIPT?
  - You can send all your critical remarks to /dev/null, unless it's something I could
    learn or otherwise benefit from - in such case, you can contact me on CodeWars
    Gitter channel.
-
-
 THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
 -------------------------------------------------------------
  I am really sorry if this code hurts your eyes, brain, or feelings
  in any way, but I am not a professional HTML developer and each and
  every technique present here (JavaScript, jQuery, TamperMonkey,
  CW API) I've used for the first time.
-
-
 CREDITS
 -------
  - CodeWars
@@ -98,8 +85,10 @@ CREDITS
  - StackOverflow
  - jQuery
  - notify.js
-
 ****************************************************************/
+
+/* globals jQuery, $, waitForKeyElements, App */
+var $ = window.jQuery;
 
 $.noConflict();
 
@@ -120,7 +109,7 @@ function isElementInViewport(el) {
  *********************************/
 
 function store(data) {
-    for (kata of data) {
+    for (let kata of data) {
         GM_setValue("glot.katalangs." + kata.id, kata.completedLanguages);
     }
 }
@@ -144,7 +133,9 @@ function solutionsPageDownloaded(resp) {
     store(cwResp.data);
     jQuery.notify("Downloaded page " + (resp.context + 1) + " of " + cwResp.totalPages, "success");
     if (resp.context) {
-        if (resp.context + 1 == cwResp.totalPages) fetchInProgress = false;
+        if (resp.context + 1 == cwResp.totalPages) {
+            fetchInProgress = false;
+        }
         return;
     }
     for (let i = 1; i < cwResp.totalPages; ++i) {
@@ -184,7 +175,7 @@ function dimSolved(elem) {
             .attr("data-id");
     if (!id) return;
     let langs = GM_getValue("glot.katalangs." + id, []);
-    for (lang of langs) {
+    for (let lang of langs) {
         jQuery(elem)
             .find("a[data-language='" + lang + "']")
             .children("div")
@@ -205,7 +196,7 @@ function highlightDropdownLangs(divLangSelector) {
     let itemByLang = new Map();
     divLangSelector.find("dl>dd[data-value]").each((i, e) => itemByLang.set(e.dataset.value, e));
 
-    for (lang of langs) {
+    for (let lang of langs) {
         let langElem = itemByLang.get(lang);
         jQuery(langElem).addClass("dimmed");
     }
@@ -235,7 +226,9 @@ function toppedUp(resp) {
 }
 
 function topUpList(marker) {
-    if (topUpInProgress) return;
+    if (topUpInProgress) {
+        return;
+    }
 
     let nextPage = marker.data("page");
     let ub = new App.UriBuilder();
@@ -256,7 +249,9 @@ function topUpList(marker) {
 function removeFromSearch(kata) {
     jQuery(kata).hide();
     let marker = jQuery("div.js-infinite-marker");
-    if (!marker || !marker.length) return;
+    if (!marker || !marker.length) {
+        return;
+    }
     let vsb = isElementInViewport(marker);
     if (vsb) {
         topUpList(marker);
@@ -286,7 +281,6 @@ let css = `
 .dimmed {
   -webkit-filter: grayscale(0.8) blur(1px);
 }
-
 .btnCopy {
     margin-top: 1px;
     margin-right: 2px;
@@ -298,8 +292,11 @@ let css = `
 GM_addStyle(css);
 
 function kataAppeared(elem) {
-    if (shouldHighlight(elem)) addToSearch(elem);
-    else removeFromSearch(elem);
+    if (shouldHighlight(elem)) {
+        addToSearch(elem);
+    } else {
+        removeFromSearch(elem);
+    }
 
     dimSolved(elem);
 }
@@ -333,11 +330,13 @@ function setUpForm(form) {
     let langVal = sel.val();
     let lang = sel.text();
     if (lang && langVal !== "" && langVal !== "my-languages") {
-        jQuery("div.list-item.kata:first").before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + "</option><option value = \"not_solved\">Show katas I'ven't solved in " + lang + "</option></select></form>");
+        jQuery("div.list-item.kata:first").before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + '</option><option value = "not_solved">Show katas I haven\'t solved in ' + lang + "</option></select></form>");
         let cmbHc = jQuery("#cmbHighlight");
         cmbHc.change(setUpHighlightConfig);
         cmbHc.change(reHighlight);
-        if (highlightConfig == "solved" || highlightConfig == "not_solved") cmbHc.val(highlightConfig);
+        if (highlightConfig == "solved" || highlightConfig == "not_solved") {
+            cmbHc.val(highlightConfig);
+        }
     }
 
     setUpHighlightConfig();
@@ -365,7 +364,9 @@ function addCopyButton(codeElem, attempt = 10) {
     setTimeout(function() {
         codeElem = jQuery(codeElem);
 
-        if (codeElem.parents("#description").length) return;
+        if (codeElem.parents("#description").length) {
+            return;
+        }
 
         if (codeElem.parent("pre").length && !codeElem.children("button.btnCopy").length) {
             if (codeElem.children("span").length) {
@@ -476,12 +477,14 @@ function addTranslationsTab(elem) {
     if (title === "Kata Translations") {
         addKataTabs(jQuery("div.flex-row.ptm"));
         return;
-    } else if (title !== "Kata") return;
+    } else if (title !== "Kata") {
+        return;
+    }
 
     let path = window.location.pathname.split("/").slice(0, 3);
     path = path.join("/");
 
-    newUrl = new URL(window.location);
+    let newUrl = new URL(window.location);
     newUrl.pathname = path;
 
     elem.append('<dd><a href="' + newUrl.href + '/translations"><i class="icon-moon-translation "></i>Translations</a></dd>');
@@ -491,7 +494,7 @@ function addKataTabs(elem) {
     let path = window.location.pathname.split("/").slice(0, 3);
     path = path.join("/");
 
-    newUrl = new URL(window.location);
+    let newUrl = new URL(window.location);
     newUrl.pathname = path;
 
     elem.prepend('<div class="tabs is-relative"><dl class="tabs is-contained mbm">' + '<dd><a href="' + newUrl.href + '">Details</a></dd>' + '<dd><a href="' + newUrl.href + '/solutions" id="solutions"><i class="icon-moon-bullseye "></i>Solutions</a></dd>' + '<dd><a href="' + newUrl.href + '/forks"><i class="icon-moon-forked "></i>Forks</a></dd>' + '<dd><a href="' + newUrl.href + '/discuss"><i class="icon-moon-comments "></i>Discourse</a></dd>' + '<dd class="is-active"><a><i class="icon-moon-translation "></i>Translations</a></dd>' + "</dl></div>");
@@ -550,7 +553,9 @@ jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
 });
 
 jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
-    if (!isElementInViewport(this)) this.scrollIntoView();
+    if (!isElementInViewport(this)) {
+        this.scrollIntoView();
+    }
 });
 
 jQuery(document).arrive("#show_description", { existing: true }, function() {
