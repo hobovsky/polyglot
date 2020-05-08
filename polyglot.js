@@ -16,19 +16,23 @@
 // ==/UserScript==
 
 /****************************************************************
+
 WHAI IS IT?
 -----------
  This piece of code is a Tampermonkey user script which provides some
  additional per-language filtering and display capabilities,
  effectively making it easier for you to obtain POLYGLOT badge.
+
 WHERE CAN I DOWNLOAD IT FROM?
 -----------------------------
  You can get the script here: https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
-HOW TO INSTALL IT?
+
+ HOW TO INSTALL IT?
 ------------------
  - Install Tampermonkey extension for your browser,
  - Copy&paste the script to your scripts library.
-WHAT FEATURES DOES IT PROVIDE?
+
+ WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
  - All 'available language' icons show whether you've completed
    given kata in some particular language. Languages are marked
@@ -46,17 +50,21 @@ WHAT FEATURES DOES IT PROVIDE?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
-   now and can be collapsed after once expanded.
  - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
    page.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
-HOW TO UNINSTALL IT?
+ - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded. ~~ (feature was removed from Polyglot
+   as it got implemented directly on CW)
+
+
+ HOW TO UNINSTALL IT?
 --------------------
  I haven't checked.
-KNOWN ISSUES
+
+ KNOWN ISSUES
 ------------
  - Yes.
  - A race condition here or there.
@@ -64,7 +72,8 @@ KNOWN ISSUES
  - Sometimes search results may contain duplicated pages.
  - Selectors, hooks and listeners used are so inefficient that your local power
    plant probably doubles its coal consumption.
-WHAT CAN I DO WITH THE SCRIPT?
+
+ WHAT CAN I DO WITH THE SCRIPT?
 ------------------------------
  - You are allowed to use it, unless someone authoritative (CW staff?) says you can't.
  - You can modify it ONLY IF your modifications are going to bring any improvement
@@ -72,13 +81,15 @@ WHAT CAN I DO WITH THE SCRIPT?
  - You can send all your critical remarks to /dev/null, unless it's something I could
    learn or otherwise benefit from - in such case, you can contact me on CodeWars
    Gitter channel.
-THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
+
+ THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
 -------------------------------------------------------------
  I am really sorry if this code hurts your eyes, brain, or feelings
  in any way, but I am not a professional HTML developer and each and
  every technique present here (JavaScript, jQuery, TamperMonkey,
  CW API) I've used for the first time.
-CREDITS
+
+ CREDITS
 -------
  - CodeWars
  - TamperMonkey
@@ -432,44 +443,6 @@ function tabidizePastSolutions(liElem) {
 }
 
 /********************************
- *          Panel toggles        *
- *********************************/
-
-function decoratePanelToggles() {
-    //Kata description
-    {
-        let origDescToggle = jQuery("#show_description");
-        let newDescToggle = origDescToggle.clone();
-        newDescToggle.attr("id", "glot_" + origDescToggle.attr("id"));
-        origDescToggle.replaceWith(newDescToggle);
-        let elema = newDescToggle.find("> div > a")[0];
-        elema.textContent = "Show / Hide Kata Description";
-        newDescToggle.click(function() {
-            if (!elema.descriptionMarkdown) {
-                elema.descriptionMarkdown = new App.Controls.MarkdownDisplay("#description", {
-                    language: App.data.activeLanguage
-                });
-                elema.descriptionMarkdown.setMarkdown(App.data.description);
-            }
-            jQuery("#description_panel").slideToggle();
-        });
-    }
-
-    //Test fixture
-    {
-        let origTestsToggle = jQuery("#show_fixture");
-        let newTestsToggle = origTestsToggle.clone();
-        newTestsToggle.attr("id", "glot_" + origTestsToggle.attr("id"));
-        origTestsToggle.replaceWith(newTestsToggle);
-        let elema = newTestsToggle.find("> div > a")[0];
-        elema.textContent = "Show / Hide Kata Test Cases";
-        newTestsToggle.click(function() {
-            jQuery("#fixture_panel").slideToggle();
-        });
-    }
-}
-
-/********************************
  *        Translations tab       *
  *********************************/
 function addTranslationsTab(elem) {
@@ -556,10 +529,6 @@ jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
     if (!isElementInViewport(this)) {
         this.scrollIntoView();
     }
-});
-
-jQuery(document).arrive("#show_description", { existing: true }, function() {
-    decoratePanelToggles();
 });
 
 jQuery(document).arrive("#play_next_btn", { existing: true, onceOnly: false }, function() {
