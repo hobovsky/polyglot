@@ -40,10 +40,10 @@ WHERE CAN I DOWNLOAD IT FROM?
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
- - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
-   now and can be collapsed after once expanded. ~~ (feature was removed from Polyglot
+ - ~~"Show Kata Description" and "Show Kata Test Cases" sections can be toggled~~
+   ~~now and can be collapsed after once expanded.~~ (feature was removed from Polyglot
    as it got implemented directly on CW)
-
+ 
 
  HOW TO UNINSTALL IT?
 --------------------
