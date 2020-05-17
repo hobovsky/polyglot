@@ -12,13 +12,12 @@ WHERE CAN I DOWNLOAD IT FROM?
 -----------------------------
  You can get the script [here](https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js).
 
-HOW TO INSTALL IT?
+ HOW TO INSTALL IT?
 ------------------
  - Install Tampermonkey extension for your browser,
  - Copy&paste the script to your scripts library.
 
-
-WHAT FEATURES DOES IT PROVIDE?
+ WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
  - All 'available language' icons show whether you've completed
    given kata in some particular language. Languages are marked
@@ -38,18 +37,19 @@ WHAT FEATURES DOES IT PROVIDE?
    automatically scrolled to show your score.
  - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
    page.
- - "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
-   now and can be collapsed after once expanded.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
+ - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded. ~~ (feature was removed from Polyglot
+   as it got implemented directly on CW)
 
-HOW TO UNINSTALL IT?
+
+ HOW TO UNINSTALL IT?
 --------------------
  I haven't checked.
 
-
-KNOWN ISSUES
+ KNOWN ISSUES
 ------------
  - Yes.
  - A race condition here or there.
@@ -58,7 +58,7 @@ KNOWN ISSUES
  - Selectors, hooks and listeners used are so inefficient that your local power
    plant probably doubles its coal consumption.
 
-WHAT CAN I DO WITH THE SCRIPT?
+ WHAT CAN I DO WITH THE SCRIPT?
 ------------------------------
  - You are allowed to use it, unless someone authoritative (CW staff?) says you can't.
  - You can modify it ONLY IF your modifications are going to bring any improvement
@@ -67,16 +67,14 @@ WHAT CAN I DO WITH THE SCRIPT?
    learn or otherwise benefit from - in such case, you can contact me on CodeWars
    Gitter channel.
 
-
-THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
+ THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
 -------------------------------------------------------------
  I am really sorry if this code hurts your eyes, brain, or feelings
  in any way, but I am not a professional HTML developer and each and
  every technique present here (JavaScript, jQuery, TamperMonkey,
  CW API) I've used for the first time.
 
-
-CREDITS
+ CREDITS
 -------
  - CodeWars
  - TamperMonkey

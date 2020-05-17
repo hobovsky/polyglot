@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.7
+// @version 1.3.8
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -432,7 +432,7 @@ function tabidizePastSolutions(liElem) {
     langTabs.prepend('<ul class="tabsList"></ul>');
     let langTabsList = langTabs.children("ul.tabsList:first").first();
 
-    let langs = langDivs.children("h5");
+    let langs = langDivs.children("p");
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
         langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text() + "</a></li>");
