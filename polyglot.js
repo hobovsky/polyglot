@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.8
+// @version 1.3.9
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -50,15 +50,16 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
-   page.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
- - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
-   now and can be collapsed after once expanded. ~~ (feature was removed from Polyglot
-   as it got implemented directly on CW)
 
+ Features removed from Polyglot as they got implemented directly on Codewars:
+ - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded. ~~
+-  ~~ Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
+   page. ~~
+ 
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -443,37 +444,6 @@ function tabidizePastSolutions(liElem) {
 }
 
 /********************************
- *        Translations tab       *
- *********************************/
-function addTranslationsTab(elem) {
-    let title = jQuery("h1.page-title").text();
-    if (title === "Kata Translations") {
-        addKataTabs(jQuery("div.flex-row.ptm"));
-        return;
-    } else if (title !== "Kata") {
-        return;
-    }
-
-    let path = window.location.pathname.split("/").slice(0, 3);
-    path = path.join("/");
-
-    let newUrl = new URL(window.location);
-    newUrl.pathname = path;
-
-    elem.append('<dd><a href="' + newUrl.href + '/translations"><i class="icon-moon-translation "></i>Translations</a></dd>');
-}
-
-function addKataTabs(elem) {
-    let path = window.location.pathname.split("/").slice(0, 3);
-    path = path.join("/");
-
-    let newUrl = new URL(window.location);
-    newUrl.pathname = path;
-
-    elem.prepend('<div class="tabs is-relative"><dl class="tabs is-contained mbm">' + '<dd><a href="' + newUrl.href + '">Details</a></dd>' + '<dd><a href="' + newUrl.href + '/solutions" id="solutions"><i class="icon-moon-bullseye "></i>Solutions</a></dd>' + '<dd><a href="' + newUrl.href + '/forks"><i class="icon-moon-forked "></i>Forks</a></dd>' + '<dd><a href="' + newUrl.href + '/discuss"><i class="icon-moon-comments "></i>Discourse</a></dd>' + '<dd class="is-active"><a><i class="icon-moon-translation "></i>Translations</a></dd>' + "</dl></div>");
-}
-
-/********************************
  *          DOM Listeners        *
  *********************************/
 
@@ -529,9 +499,4 @@ jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
     if (!isElementInViewport(this)) {
         this.scrollIntoView();
     }
-});
-
-jQuery(document).arrive("#play_next_btn", { existing: true, onceOnly: false }, function() {
-    let elem = jQuery("dl.tabs");
-    addTranslationsTab(elem);
 });
