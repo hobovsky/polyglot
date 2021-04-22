@@ -35,14 +35,15 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
-   page.
  - TODO: Filter discourse threads by resolution status (show only
    resolved/unresolved).
  - TODO: You can configure the script and enable/disable features.
- - ~~"Show Kata Description" and "Show Kata Test Cases" sections can be toggled~~
-   ~~now and can be collapsed after once expanded.~~ (feature was removed from Polyglot
-   as it got implemented directly on CW)
+
+ Features removed from Polyglot as they got implemented directly on Codewars:
+ - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded. ~~
+-  ~~ Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
+   page. ~~
  
 
  HOW TO UNINSTALL IT?
@@ -81,3 +82,4 @@ WHERE CAN I DOWNLOAD IT FROM?
  - StackOverflow
  - jQuery
  - notify.js
+ 
