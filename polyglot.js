@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.10
+// @version 1.3.11
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -224,7 +224,7 @@ function toppedUp(resp) {
     topUpInProgress = false;
     let cwResp = resp.responseText;
     let toAppend = jQuery.parseHTML(cwResp);
-    let kataList = jQuery(toAppend).find("div.list-item.kata");
+    let kataList = jQuery(toAppend).find("div.list-item-kata");
     if (!kataList.length) {
         jQuery.notify("No more katas available.", "info");
         return;
@@ -314,7 +314,7 @@ function kataAppeared(elem) {
 }
 
 function reHighlight() {
-    jQuery("div.list-item.kata").each(function() {
+    jQuery("div.list-item-kata").each(function() {
         kataAppeared(this);
     });
 }
@@ -342,7 +342,7 @@ function setUpForm(form) {
     let langVal = sel.val();
     let lang = sel.text();
     if (lang && langVal !== "" && langVal !== "my-languages") {
-        jQuery("div.list-item.kata:first").before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + '</option><option value = "not_solved">Show katas I haven\'t solved in ' + lang + "</option></select></form>");
+        jQuery("div.list-item-kata:first").before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + '</option><option value = "not_solved">Show katas I haven\'t solved in ' + lang + "</option></select></form>");
         let cmbHc = jQuery("#cmbHighlight");
         cmbHc.change(setUpHighlightConfig);
         cmbHc.change(reHighlight);
@@ -447,7 +447,7 @@ function tabidizePastSolutions(liElem) {
  *          DOM Listeners        *
  *********************************/
 
-jQuery(document).arrive("div.list-item.kata", { existing: true }, function() {
+jQuery(document).arrive("div.list-item-kata", { existing: true }, function() {
     kataAppeared(this);
 });
 
