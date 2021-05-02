@@ -463,7 +463,7 @@ jQuery(document).leave("#filters", { existing: true }, function() {
     highlightLang = "";
 });
 
-jQuery(document).arrive("div.list-item.solutions:first-child", { existing: true }, function() {
+jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true }, function() {
     if (!fetchInProgress) {
         fetchInProgress = true;
         jQuery.notify("Fetching solved languages...", "info");
@@ -474,7 +474,7 @@ jQuery(document).arrive("div.list-item.solutions:first-child", { existing: true 
     }
 });
 
-jQuery(document).arrive("div.list-item.solutions", { existing: true, onceOnly: false }, function() {
+jQuery(document).arrive("div.list-item-solutions", { existing: true, onceOnly: false }, function() {
     tabidizeByLanguage(this);
 });
 
