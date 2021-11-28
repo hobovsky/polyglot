@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.11
+// @version 1.3.12
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -40,7 +40,7 @@ WHERE CAN I DOWNLOAD IT FROM?
    tab of your CodeWars profile to let the script fetch/update information
    about your solutions.
  - When you filter kata search results by a language of your choice,
-   additional filter option appears which lets you see which katas
+   additional filter option appears which lets you see which kata
    you have or haven't completed in this language.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
@@ -59,7 +59,7 @@ WHERE CAN I DOWNLOAD IT FROM?
    now and can be collapsed after once expanded. ~~
 -  ~~ Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
    page. ~~
- 
+
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -226,7 +226,7 @@ function toppedUp(resp) {
     let toAppend = jQuery.parseHTML(cwResp);
     let kataList = jQuery(toAppend).find("div.list-item-kata");
     if (!kataList.length) {
-        jQuery.notify("No more katas available.", "info");
+        jQuery.notify("No more kata available.", "info");
         return;
     }
     let marker = jQuery("div.js-infinite-marker");
@@ -254,7 +254,7 @@ function topUpList(marker) {
         onreadystatechange: toppedUp
     };
     GM_xmlhttpRequest(opts);
-    jQuery.notify("Downloading page " + nextPage + " of available katas...", "info");
+    jQuery.notify("Downloading page " + nextPage + " of available kata...", "info");
     topUpInProgress = true;
 }
 
@@ -334,25 +334,34 @@ function setUpHighlightConfig() {
     highlightConfig = jQuery("#cmbHighlight>option:selected").val();
 }
 
+
 function setUpForm(form) {
-    form = jQuery(form);
-    form.find("select").change(setUpHighlightConfig);
+  form = jQuery(form)
+  form.find('select').change(setUpHighlightConfig)
 
-    let sel = form.find("#language_filter>option:selected");
-    let langVal = sel.val();
-    let lang = sel.text();
-    if (lang && langVal !== "" && langVal !== "my-languages") {
-        jQuery("div.list-item-kata:first").before('<form id="dummy_form"><select id="cmbHighlight"><option value = "all">Show all</option><option value = "solved">Show katas I\'ve solved in ' + lang + '</option><option value = "not_solved">Show katas I haven\'t solved in ' + lang + "</option></select></form>");
-        let cmbHc = jQuery("#cmbHighlight");
-        cmbHc.change(setUpHighlightConfig);
-        cmbHc.change(reHighlight);
-        if (highlightConfig == "solved" || highlightConfig == "not_solved") {
-            cmbHc.val(highlightConfig);
-        }
+  const sel = form.find('#language_filter>option:selected')
+  const langVal = sel.val()
+  const lang = sel.text()
+  if (lang && langVal !== '' && langVal !== 'my-languages') {
+    jQuery('div.list-item-kata:first').before(
+      `${'<form id="dummy_form">'
+        + '<select id="cmbHighlight" class="mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md">'
+          + '<option value = "all">Show all</option>'
+          + '<option value = "solved">Show kata I\'ve solved in '}${lang}</option>`
+          + `<option value = "not_solved">Show kata I haven't solved in ${lang}</option>`
+        + '</select>'
+      + '</form>')
+    const cmbHc = jQuery('#cmbHighlight')
+    cmbHc.change(setUpHighlightConfig)
+    cmbHc.change(reHighlight)
+    if (highlightConfig === 'solved' || highlightConfig === 'not_solved') {
+      cmbHc.val(highlightConfig)
     }
+  }
 
-    setUpHighlightConfig();
+  setUpHighlightConfig()
 }
+
 
 /********************************
  *            Clipboard          *
