@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.12
+// @version 1.3.13
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -199,7 +199,7 @@ function dimSolved(elem) {
 function highlightDropdownLangs(divLangSelector) {
     divLangSelector = jQuery(divLangSelector);
     let kataHref = divLangSelector
-        .find("dl>dd")
+        .find("dl>dd[data-href]")
         .first()
         .data("href");
     let kataId = kataHref.split("/")[2];
