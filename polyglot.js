@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.13
+// @version 1.3.14
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -188,11 +188,20 @@ function dimSolved(elem) {
     if (!id) return;
     let langs = GM_getValue("glot.katalangs." + id, []);
     for (let lang of langs) {
+
         jQuery(elem)
             .find("a[data-language='" + lang + "']")
             .children("div")
             .children("i")
             .addClass("dimmed");
+
+        let divs = jQuery(elem)
+            .find("a[data-language='" + lang + "']")
+            .children("div");
+
+        divs.css('position', 'relative');
+        divs.append("<div class='highlight'><div class='highlight-upper' /><div class='highlight-lower' /></div>");
+
     }
 }
 
@@ -293,6 +302,46 @@ let css = `
 .dimmed {
   -webkit-filter: grayscale(0.8) blur(1px);
 }
+
+.highlight {
+    position:absolute;
+    top: 0;
+    left: 0;
+    bottom:0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+}
+
+
+.highlight-upper {
+    position:absolute;
+    top: 0;
+    left: 0;
+    bottom:0;
+    right: 0;
+    height: 50%;
+    width: 100%;
+    background-color: #0066cc;
+}
+
+.highlight-lower {
+    position:absolute;
+    top: 50%;
+    left: 0;
+    bottom:0;
+    right: 0;
+    height: 50%;
+    width: 100%;
+    background-color: #ffcc00;
+}
+
+.highlight:hover {
+    opacity: 0.2;
+}
+
+
 .btnCopy {
     margin-top: 1px;
     margin-right: 2px;
