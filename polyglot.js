@@ -526,7 +526,7 @@ jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true 
         fetchInProgress = true;
         jQuery.notify("Fetching solved languages...", "info");
 
-        let tabs = jQuery(this.parentElement.parentElement.previousElementSibling.firstElementChild);
+        let tabs = jQuery(this.parentElement.parentElement.parentElement.previousElementSibling.firstElementChild);
         let href = tabs.find("dd.is-active > a").attr("href");
         updateSolutions(0);
     }
