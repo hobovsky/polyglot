@@ -506,6 +506,6 @@ jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
 
 jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
     if (!isElementInViewport(this)) {
-        this.scrollIntoView();
+        this.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 });
