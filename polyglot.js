@@ -504,8 +504,103 @@ jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
     elem.attr("href", "/users/leaderboard/kata");
 });
 
+
+function decorateLeaderboardRow(tableRow, boardEntry) {
+    jQuery(tableRow.children[0]).text(boardEntry.position);
+    jQuery(tableRow.children[1]).text(boardEntry.username);
+    jQuery(tableRow.children[2]).text('');
+    jQuery(tableRow.children[3]).text(boardEntry.score);
+}
+
+function leaderboardDownloaded(resp) {
+    if (resp.readyState !== 4) return;
+    let cwResp = resp.response;
+    console.info(cwResp);
+
+    const leaderboardEntries = cwResp.data;
+    const leaderboardRows = jQuery('tr[data-username]');
+
+    const maxRow = Math.max(leaderboardEntries.length, leaderboardRows.length);
+
+    for(let rowNum = 0; rowNum < maxRow; ++rowNum) {
+        decorateLeaderboardRow(leaderboardRows[rowNum], leaderboardEntries[rowNum]);
+    }
+
+    return;
+    //jQuery.notify("Downloaded page " + (resp.context) + " of " + cwResp.totalPages, "success");
+    if (resp.context) {
+        if (resp.context + 1 == cwResp.totalPages) {
+            fetchInProgress = false;
+        }
+        return;
+    }
+    for (let i = 1; i < cwResp.totalPages; ++i) {
+        updateSolutions(i);
+    }
+}
+
+function buildLeaderboard(lang) {
+
+    let url = "/api/v1/leaders/ranks/" + lang;
+    function fetchAborted() {
+        fetchInProgress = false;
+        jQuery.notify("Fetch aborted.", "info");
+    }
+    function fetchError() {
+        fetchInProgress = false;
+        jQuery.notify("ERROR!", "error");
+    }
+    let opts = {
+        method: "GET",
+        url: url,
+        onreadystatechange: leaderboardDownloaded,
+        onabort: fetchAborted,
+        onerror: fetchError,
+        context: lang,
+        responseType: "json"
+    };
+    GM_xmlhttpRequest(opts);
+
+}
+
+// https://www.codewars.com/api/v1/languages
+
+function buildLanguagesDropdown() {
+    let url = "/api/v1/languages";
+    function fetchAborted() {
+        jQuery.notify("Fetch aborted.", "info");
+    }
+    function fetchError() {
+        jQuery.notify("ERROR!", "error");
+    }
+
+    function makeLangItems(langItems) {
+        return langItems.map(({id, name}) => `<option value='${id}'>${name}</option>`)
+    }
+
+    function languagesDownloaded(resp) {
+        if (resp.readyState !== 4) return;
+        jQuery('div.leaderboard').prepend('<select id="languagesDropdown" class="mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md"><option value="overall">Overall</option>'+ makeLangItems(resp.response.data).join('') +'</select>');
+    }
+
+    let opts = {
+        method: "GET",
+        url: url,
+        onreadystatechange: languagesDownloaded,
+        onabort: fetchAborted,
+        onerror: fetchError,
+        responseType: "json"
+    };
+    GM_xmlhttpRequest(opts);
+}
+
 jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
+
+    buildLanguagesDropdown();
+    buildLeaderboard('overall');
+    /*
     if (!isElementInViewport(this)) {
         this.scrollIntoView();
     }
+    */
 });
