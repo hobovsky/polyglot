@@ -17,7 +17,7 @@
 
 /****************************************************************
 
-WHAI IS IT?
+WHAT IS IT?
 -----------
  This piece of code is a Tampermonkey user script which provides some
  additional per-language filtering and display capabilities,
@@ -25,20 +25,20 @@ WHAI IS IT?
 
 WHERE CAN I DOWNLOAD IT FROM?
 -----------------------------
- You can get the script here: https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
+ You can get the script [here](https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js).
 
  HOW TO INSTALL IT?
 ------------------
  - Install Tampermonkey extension for your browser,
  - Copy&paste the script to your scripts library.
+ - Go to Solutions tab of your Codewars profile to let
+   the script fetch/update information about your solutions.
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
  - All 'available language' icons show whether you've completed
    given kata in some particular language. Languages are marked
-   also in language selection dropdowns - but first go to Solutions
-   tab of your CodeWars profile to let the script fetch/update information
-   about your solutions.
+   also in language selection dropdowns.
  - When you filter kata search results by a language of your choice,
    additional filter option appears which lets you see which kata
    you have or haven't completed in this language.
@@ -50,16 +50,15 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - TODO: Filter discourse threads by resolution status (show only
-   resolved/unresolved).
- - TODO: You can configure the script and enable/disable features.
+ - Leaderboards: Rank leaderboards utilizing Codewars API, to show users
+   ranked by overall rank or a language rank.
 
  Features removed from Polyglot as they got implemented directly on Codewars:
- - ~~ "Show Kata Description" and "Show Kata Test Cases" sections can be toggled
-   now and can be collapsed after once expanded. ~~
--  ~~ Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
-   page. ~~
-
+ - ~~"Show Kata Description" and "Show Kata Test Cases" sections can be toggled
+   now and can be collapsed after once expanded.~~
+ - ~~Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
+   page.~~
+ 
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -79,9 +78,9 @@ WHERE CAN I DOWNLOAD IT FROM?
  - You are allowed to use it, unless someone authoritative (CW staff?) says you can't.
  - You can modify it ONLY IF your modifications are going to bring any improvement
    into the way it works, AND you are going to share improved version with CW community.
- - You can send all your critical remarks to /dev/null, unless it's something I could
-   learn or otherwise benefit from - in such case, you can contact me on CodeWars
-   Gitter channel.
+ - You can send all your critical remarks to `/dev/null`, unless it's something I could
+   learn or otherwise benefit from - in such case, you can contact me on Codewars
+   Discord server.
 
  THIS CODE IS CRAP, LOOKS LIKE CRAP, AND WORKS LIKE CRAP! WHY?
 -------------------------------------------------------------
@@ -92,7 +91,7 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  CREDITS
 -------
- - CodeWars
+ - Codewars
  - TamperMonkey
  - StackOverflow
  - jQuery
