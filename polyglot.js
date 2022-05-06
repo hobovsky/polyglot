@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.15
+// @version 1.3.16
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -505,31 +505,59 @@ jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
 });
 
 
-function decorateLeaderboardRow(tableRow, boardEntry) {
-    jQuery(tableRow.children[0]).text(boardEntry.position);
-    jQuery(tableRow.children[1]).text(boardEntry.username);
-    jQuery(tableRow.children[2]).text('');
-    jQuery(tableRow.children[3]).text(boardEntry.score);
+function makeRankBadge(rank) {
+
+    function getRankColor() {
+        switch(rank) {
+            case 1: case 2:
+            case 3: case 4: return 'black';
+            case -1: case -2: return "purple";
+            case -3: case -4: return 'blue';
+            case -5: case -6: return 'yellow';
+            default: return 'white';
+        }
+    }
+
+    function getRankValue() { return Math.abs(rank) }
+    function getRankDenom() { return rank < 0 ? "kyu" : "dan" }
+
+    return `<div class="small-hex is-extra-wide is-${getRankColor()}-rank float-left mt-5px mr-5"><div class="inner-small-hex is-extra-wide "><span>${getRankValue()} ${getRankDenom()}</span></div></div>`
+}
+
+function getCurrentPlayerClass(leaderboardEntry) {
+    return leaderboardEntry.username == getUserName() ? 'class="is-current-player"' : ""
+}
+
+function createLeaderboardRow(boardEntry) {
+
+    let row = `<tr data-username="${boardEntry.username}" ${getCurrentPlayerClass(boardEntry)}><td class="rank is-small">#${boardEntry.position}</td><td class="is-big">${makeRankBadge(boardEntry.rank)} <a href="/users/${boardEntry.id}">${boardEntry.username}</a></td><td></td><td>${boardEntry.score}</td></tr>`
+    return row;
+}
+
+function fillLeaderboardRows(collected) {
+    const leaderboardRows = jQuery('tr[data-username]');
+    leaderboardRows.remove();
+
+    var rowsHtml = collected.map(createLeaderboardRow).join('');
+    jQuery('div.leaderboard table tbody').append(rowsHtml);
 }
 
 function leaderboardDownloaded(resp) {
     if (resp.readyState !== 4) return;
     let cwResp = resp.response;
-    console.info(cwResp);
-
     const leaderboardEntries = cwResp.data;
-    const leaderboardRows = jQuery('tr[data-username]');
-
-    const maxRow = Math.min(leaderboardEntries.length, leaderboardRows.length);
-
-    for(let rowNum = 0; rowNum < maxRow; ++rowNum) {
-        decorateLeaderboardRow(leaderboardRows[rowNum], leaderboardEntries[rowNum]);
+    const {lang, collected, page} = resp.context;
+    if(leaderboardEntries && leaderboardEntries.length) {
+        collected.push(...leaderboardEntries);
+        buildLeaderboard(lang, collected, page+1);
+    } else {
+        fillLeaderboardRows(collected);
     }
 }
 
-function buildLeaderboard(lang) {
+function buildLeaderboard(lang, collected, page=1) {
 
-    let url = "/api/v1/leaders/ranks/" + lang;
+    let url = `/api/v1/leaders/ranks/${lang}?page=${page}`;
     function fetchAborted() {
         jQuery.notify("Fetch aborted.", "info");
     }
@@ -542,15 +570,16 @@ function buildLeaderboard(lang) {
         onreadystatechange: leaderboardDownloaded,
         onabort: fetchAborted,
         onerror: fetchError,
-        context: lang,
+        context: {lang: lang, collected: collected, page: page},
         responseType: "json"
     };
     GM_xmlhttpRequest(opts);
+    jQuery.notify(`Fetching leaderboard page ${page}...`, "info");
 }
 
 function languageChanged() {
     const selectedLanguage = jQuery('#languagesDropdown').val();
-    buildLeaderboard(selectedLanguage);
+    buildLeaderboard(selectedLanguage, [], 1);
 }
 
 function buildLanguagesDropdown() {
@@ -591,10 +620,19 @@ function buildLanguagesLeaderboardTab() {
         jQuery('dd.is-active').removeClass('is-active');
         jQuery('#languagesLeaderboardTab').addClass('is-active');
         buildLanguagesDropdown();
-        buildLeaderboard('overall');
+        buildLeaderboard('overall', [], 1);
     });
 }
 
+jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
+    if(jQuery(elem).text() == 'Leaderboards') {
+        buildLanguagesLeaderboardTab();
+    }
+});
+
+
 jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
-    buildLanguagesLeaderboardTab();
+    if (!isElementInViewport(this)) {
+        this.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
 });
