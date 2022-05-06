@@ -1,6 +1,7 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
-// @version 1.3.16
+// @description User script which provides some extra functionalities to Codewars
+// @version 1.3.16.1
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -58,7 +59,7 @@ WHERE CAN I DOWNLOAD IT FROM?
    now and can be collapsed after once expanded.~~
  - ~~Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
    page.~~
- 
+
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -102,6 +103,8 @@ WHERE CAN I DOWNLOAD IT FROM?
 var $ = window.jQuery;
 
 $.noConflict();
+
+const DROPDOWN_STYLE_CLASS = 'mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md';
 
 jQuery("head").append("<link " + 'href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/dark-hive/jquery-ui.min.css" ' + 'rel="stylesheet" type="text/css">');
 
@@ -191,7 +194,7 @@ function dimSolved(elem) {
             .find("a[data-language='" + lang + "']")
             .children("div")
             .children("i")
-            .addClass("dimmed");
+            .addClass("glotDimmed");
     }
 }
 
@@ -209,7 +212,7 @@ function highlightDropdownLangs(divLangSelector) {
 
     for (let lang of langs) {
         let langElem = itemByLang.get(lang);
-        jQuery(langElem).addClass("dimmed");
+        jQuery(langElem).addClass("glotDimmed");
     }
 }
 
@@ -289,10 +292,10 @@ function shouldHighlight(elem) {
 }
 
 let css = `
-.dimmed {
+.glotDimmed {
   -webkit-filter: grayscale(0.8) blur(1px);
 }
-.btnCopy {
+.glotBtnCopy {
     margin-top: 1px;
     margin-right: 2px;
     float: right;
@@ -330,7 +333,7 @@ function setUpHighlightConfig() {
         highlightLang = "";
         return;
     }
-    highlightConfig = jQuery("#cmbHighlight>option:selected").val();
+    highlightConfig = jQuery("#glotCmbHighlight>option:selected").val();
 }
 
 
@@ -344,13 +347,13 @@ function setUpForm(form) {
   if (lang && langVal !== '' && langVal !== 'my-languages') {
     jQuery('div.list-item-kata:first').before(
       `${'<form id="dummy_form">'
-        + '<select id="cmbHighlight" class="mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md">'
+        + `<select id="glotCmbHighlight" class="${DROPDOWN_STYLE_CLASS}">`
           + '<option value = "all">Show all</option>'
           + '<option value = "solved">Show kata I\'ve solved in '}${lang}</option>`
           + `<option value = "not_solved">Show kata I haven't solved in ${lang}</option>`
         + '</select>'
       + '</form>')
-    const cmbHc = jQuery('#cmbHighlight')
+    const cmbHc = jQuery('#glotCmbHighlight')
     cmbHc.change(setUpHighlightConfig)
     cmbHc.change(reHighlight)
     if (highlightConfig === 'solved' || highlightConfig === 'not_solved') {
@@ -388,9 +391,9 @@ function addCopyButton(codeElem, attempt = 10) {
             return;
         }
 
-        if (codeElem.parent("pre").length && !codeElem.children("button.btnCopy").length) {
+        if (codeElem.parent("pre").length && !codeElem.children("button.glotBtnCopy").length) {
             if (codeElem.children("span").length) {
-                codeElem.prepend("<button class='btnCopy' type='button'>" + btnCaption + "</button>");
+                codeElem.prepend("<button class='glotBtnCopy' type='button'>" + btnCaption + "</button>");
                 let btn = codeElem.children("button").first();
                 btn.on("click", copyToClipboardFunc(codeElem));
             } else if (attempt) {
@@ -452,6 +455,128 @@ function tabidizePastSolutions(liElem) {
 }
 
 /********************************
+ *       Rank Leaderboards       *
+ *********************************/
+function makeRankBadge(rank) {
+
+    function getRankColor() {
+        switch(rank) {
+            case 1: case 2:
+            case 3: case 4: return 'black';
+            case -1: case -2: return "purple";
+            case -3: case -4: return 'blue';
+            case -5: case -6: return 'yellow';
+            default: return 'white';
+        }
+    }
+
+    function getRankValue() { return Math.abs(rank) }
+    function getRankDenom() { return rank < 0 ? "kyu" : "dan" }
+
+    return `<div class="small-hex is-extra-wide is-${getRankColor()}-rank float-left mt-5px mr-5"><div class="inner-small-hex is-extra-wide "><span>${getRankValue()} ${getRankDenom()}</span></div></div>`
+}
+
+function getCurrentPlayerClass(leaderboardEntry) {
+    return leaderboardEntry.username == getUserName() ? 'class="is-current-player"' : ""
+}
+
+function createLeaderboardRow(boardEntry) {
+
+    let row = `<tr data-username="${boardEntry.username}" ${getCurrentPlayerClass(boardEntry)}><td class="rank is-small">#${boardEntry.position}</td><td class="is-big">${makeRankBadge(boardEntry.rank)} <a href="/users/${boardEntry.id}">${boardEntry.username}</a></td><td></td><td>${boardEntry.score}</td></tr>`
+    return row;
+}
+
+function fillLeaderboardRows(collected) {
+    const leaderboardRows = jQuery('tr[data-username]');
+    leaderboardRows.remove();
+
+    var rowsHtml = collected.sort((r1, r2)=>r2.score-r1.score).map(createLeaderboardRow).join('');
+    jQuery('div.leaderboard table tbody').append(rowsHtml);
+}
+
+function leaderboardDownloaded(resp) {
+    if (resp.readyState !== 4) return;
+    let cwResp = resp.response;
+    const leaderboardEntries = cwResp.data;
+    const {lang, collected, page} = resp.context;
+    if(leaderboardEntries && leaderboardEntries.length) {
+        collected.push(...leaderboardEntries);
+        buildLeaderboard(lang, collected, page+1);
+    } else {
+        fillLeaderboardRows(collected);
+    }
+}
+
+function buildLeaderboard(lang, collected, page=1) {
+
+    let url = `/api/v1/leaders/ranks/${lang}?page=${page}`;
+    function fetchAborted() {
+        jQuery.notify("Fetch aborted.", "info");
+    }
+    function fetchError() {
+        jQuery.notify("ERROR!", "error");
+    }
+    let opts = {
+        method: "GET",
+        url: url,
+        onreadystatechange: leaderboardDownloaded,
+        onabort: fetchAborted,
+        onerror: fetchError,
+        context: {lang: lang, collected: collected, page: page},
+        responseType: "json"
+    };
+    GM_xmlhttpRequest(opts);
+    jQuery.notify(`Fetching leaderboard page ${page}...`, "info");
+}
+
+function languageChanged() {
+    const selectedLanguage = jQuery('#glotLanguagesDropdown').val();
+    buildLeaderboard(selectedLanguage, [], 1);
+}
+
+function buildLanguagesDropdown() {
+    let url = "/api/v1/languages";
+    function fetchAborted() {
+        jQuery.notify("Fetch aborted.", "info");
+    }
+    function fetchError() {
+        jQuery.notify("ERROR!", "error");
+    }
+
+    function makeLangItems(langItems) {
+        return langItems.map(({id, name}) => `<option value='${id}'>${name}</option>`)
+    }
+
+    function languagesDownloaded(resp) {
+        if (resp.readyState !== 4) return;
+        jQuery('div.leaderboard').prepend(`<select id="glotLanguagesDropdown" class="${DROPDOWN_STYLE_CLASS}"><option value="overall">Overall</option>${makeLangItems(resp.response.data).join('')}</select>`);
+        jQuery('div.leaderboard').prepend('<p id="glotDisclaimer">Note from Polyglot script: The feature of rank leaderboards is still work in progress. Expect it to be buggy or incomplete.</p>')
+        jQuery('#glotLanguagesDropdown').change(languageChanged);
+    }
+
+    let opts = {
+        method: "GET",
+        url: url,
+        onreadystatechange: languagesDownloaded,
+        onabort: fetchAborted,
+        onerror: fetchError,
+        responseType: "json"
+    };
+    GM_xmlhttpRequest(opts);
+}
+
+function buildLanguagesLeaderboardTab() {
+    jQuery('dl.tabs').append('<dd id="glotLanguagesLeaderboardTab"><a id="glotRankLeaderboardLink">Rank</a></dd>');
+    jQuery('#glotRankLeaderboardLink').click(function() {
+        if(jQuery('#glotLanguagesDropdown').length) return;
+        jQuery('dd.is-active').removeClass('is-active');
+        jQuery('#glotLanguagesLeaderboardTab').addClass('is-active');
+        buildLanguagesDropdown();
+        buildLeaderboard('overall', [], 1);
+    });
+}
+
+/********************************
  *          DOM Listeners        *
  *********************************/
 
@@ -503,132 +628,11 @@ jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
     elem.attr("href", "/users/leaderboard/kata");
 });
 
-
-function makeRankBadge(rank) {
-
-    function getRankColor() {
-        switch(rank) {
-            case 1: case 2:
-            case 3: case 4: return 'black';
-            case -1: case -2: return "purple";
-            case -3: case -4: return 'blue';
-            case -5: case -6: return 'yellow';
-            default: return 'white';
-        }
-    }
-
-    function getRankValue() { return Math.abs(rank) }
-    function getRankDenom() { return rank < 0 ? "kyu" : "dan" }
-
-    return `<div class="small-hex is-extra-wide is-${getRankColor()}-rank float-left mt-5px mr-5"><div class="inner-small-hex is-extra-wide "><span>${getRankValue()} ${getRankDenom()}</span></div></div>`
-}
-
-function getCurrentPlayerClass(leaderboardEntry) {
-    return leaderboardEntry.username == getUserName() ? 'class="is-current-player"' : ""
-}
-
-function createLeaderboardRow(boardEntry) {
-
-    let row = `<tr data-username="${boardEntry.username}" ${getCurrentPlayerClass(boardEntry)}><td class="rank is-small">#${boardEntry.position}</td><td class="is-big">${makeRankBadge(boardEntry.rank)} <a href="/users/${boardEntry.id}">${boardEntry.username}</a></td><td></td><td>${boardEntry.score}</td></tr>`
-    return row;
-}
-
-function fillLeaderboardRows(collected) {
-    const leaderboardRows = jQuery('tr[data-username]');
-    leaderboardRows.remove();
-
-    var rowsHtml = collected.map(createLeaderboardRow).join('');
-    jQuery('div.leaderboard table tbody').append(rowsHtml);
-}
-
-function leaderboardDownloaded(resp) {
-    if (resp.readyState !== 4) return;
-    let cwResp = resp.response;
-    const leaderboardEntries = cwResp.data;
-    const {lang, collected, page} = resp.context;
-    if(leaderboardEntries && leaderboardEntries.length) {
-        collected.push(...leaderboardEntries);
-        buildLeaderboard(lang, collected, page+1);
-    } else {
-        fillLeaderboardRows(collected);
-    }
-}
-
-function buildLeaderboard(lang, collected, page=1) {
-
-    let url = `/api/v1/leaders/ranks/${lang}?page=${page}`;
-    function fetchAborted() {
-        jQuery.notify("Fetch aborted.", "info");
-    }
-    function fetchError() {
-        jQuery.notify("ERROR!", "error");
-    }
-    let opts = {
-        method: "GET",
-        url: url,
-        onreadystatechange: leaderboardDownloaded,
-        onabort: fetchAborted,
-        onerror: fetchError,
-        context: {lang: lang, collected: collected, page: page},
-        responseType: "json"
-    };
-    GM_xmlhttpRequest(opts);
-    jQuery.notify(`Fetching leaderboard page ${page}...`, "info");
-}
-
-function languageChanged() {
-    const selectedLanguage = jQuery('#languagesDropdown').val();
-    buildLeaderboard(selectedLanguage, [], 1);
-}
-
-function buildLanguagesDropdown() {
-    let url = "/api/v1/languages";
-    function fetchAborted() {
-        jQuery.notify("Fetch aborted.", "info");
-    }
-    function fetchError() {
-        jQuery.notify("ERROR!", "error");
-    }
-
-    function makeLangItems(langItems) {
-        return langItems.map(({id, name}) => `<option value='${id}'>${name}</option>`)
-    }
-
-    function languagesDownloaded(resp) {
-        if (resp.readyState !== 4) return;
-        jQuery('div.leaderboard').prepend('<select id="languagesDropdown" class="mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md"><option value="overall">Overall</option>'+ makeLangItems(resp.response.data).join('') +'</select>');
-        jQuery('div.leaderboard').prepend('<p id="disclaimer">Note from Polyglot script: The feature of language leaderboards is still work in progress. Expect it to be buggy or incomplete.</p>')
-        jQuery('#languagesDropdown').change(languageChanged);
-    }
-
-    let opts = {
-        method: "GET",
-        url: url,
-        onreadystatechange: languagesDownloaded,
-        onabort: fetchAborted,
-        onerror: fetchError,
-        responseType: "json"
-    };
-    GM_xmlhttpRequest(opts);
-}
-
-function buildLanguagesLeaderboardTab() {
-    jQuery('dl.tabs').append('<dd id="languagesLeaderboardTab"><a id="languagesLeaderboardLink">Languages (feature preview)</a></dd>');
-    jQuery('#languagesLeaderboardLink').click(function() {
-        if(jQuery('#languagesDropdown').length) return;
-        jQuery('dd.is-active').removeClass('is-active');
-        jQuery('#languagesLeaderboardTab').addClass('is-active');
-        buildLanguagesDropdown();
-        buildLeaderboard('overall', [], 1);
-    });
-}
-
 jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
     if(jQuery(elem).text() == 'Leaderboards') {
         buildLanguagesLeaderboardTab();
     }
 });
-
 
 jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
     if (!isElementInViewport(this)) {
