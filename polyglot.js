@@ -563,7 +563,11 @@ function buildLeaderboard(lang) {
 
 }
 
-// https://www.codewars.com/api/v1/languages
+function languageChanged() {
+
+    const selectedLanguage = jQuery('#languagesDropdown').val();
+    buildLeaderboard(selectedLanguage);
+}
 
 function buildLanguagesDropdown() {
     let url = "/api/v1/languages";
@@ -581,6 +585,7 @@ function buildLanguagesDropdown() {
     function languagesDownloaded(resp) {
         if (resp.readyState !== 4) return;
         jQuery('div.leaderboard').prepend('<select id="languagesDropdown" class="mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md"><option value="overall">Overall</option>'+ makeLangItems(resp.response.data).join('') +'</select>');
+        jQuery('#languagesDropdown').change(languageChanged);
     }
 
     let opts = {
