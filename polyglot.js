@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.3.16.1
+// @version 1.13.16
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
