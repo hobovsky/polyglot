@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.16
+// @version 1.13.17
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -639,3 +639,54 @@ jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
         this.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 });
+
+
+/*  Settings  */
+var dialog
+function buildPolyglotConfigMenu(menu) {
+    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text "/>Polyglot Settings</a></li>`);
+
+    const checkBoxes = [
+        {name: 'markSolvedLanguageIcons',     label: 'Mark solved language icons'},
+        {name: 'markSolvedLanguagesInDropdown',     label: 'Mark solved languages in trainer dropdown'},
+        {name: 'additionalSearchFilters', label: 'Additional search filters'},
+        {name: 'showSolutionsTabs',       label: 'Show solutions in tabs'},
+        {name: 'showPreviousSolutionsTabs',       label: 'Show previous solutions in tabs'},
+        {name: 'showCopyToClipboardButtons',       label: 'Show "Copy to Clipboard" button'},
+        {name: 'preferCompletedKataLeaderboard',       label: 'Prefer "Completed kata" leaderboard'},
+        {name: 'scrollLeaderboard',       label: 'Scroll leaderboards'},
+        {name: 'showRankLeaderboards',       label: 'Show "Rank" leaderboards'},
+        {name: 'alwaysShowSpoilerFlad',       label: 'Always show "Spoiler" flag'}
+    ];
+
+    function makeBox({name, label}) {
+        return `<input type="checkbox" id="glotSetting_${name}" name="${name}"><label for="glotSetting_${name}">${label}</label>`
+    }
+
+    function makeHtmlBoxes(boxes) {
+        return boxes.map(makeBox).join('</br>');
+    }
+
+    jQuery('body').append(`
+    <div id='glotSettingsDialog'>
+      <form>
+        <fieldset>
+          ${makeHtmlBoxes(checkBoxes)}
+        </fieldset>
+      </form>
+    </div>`);
+    dialog = jQuery('#glotSettingsDialog').dialog({
+      autoOpen: false,
+      height: 400,
+      width: 350,
+      modal: true
+    });
+    jQuery('#glotSettingsLink').click(function() { dialog.dialog('open'); });
+}
+
+
+
+jQuery(document).arrive("a.js-sign-out", { existing: true }, function() {
+    buildPolyglotConfigMenu(this.parentElement.parentElement);
+});
+
