@@ -647,24 +647,43 @@ function buildPolyglotConfigMenu(menu) {
     jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text "/>Polyglot Settings</a></li>`);
 
     const checkBoxes = [
-        {name: 'markSolvedLanguageIcons',     label: 'Mark solved language icons'},
-        {name: 'markSolvedLanguagesInDropdown',     label: 'Mark solved languages in trainer dropdown'},
-        {name: 'additionalSearchFilters', label: 'Additional search filters'},
-        {name: 'showSolutionsTabs',       label: 'Show solutions in tabs'},
-        {name: 'showPreviousSolutionsTabs',       label: 'Show previous solutions in tabs'},
-        {name: 'showCopyToClipboardButtons',       label: 'Show "Copy to Clipboard" button'},
-        {name: 'preferCompletedKataLeaderboard',       label: 'Prefer "Completed kata" leaderboard'},
-        {name: 'scrollLeaderboard',       label: 'Scroll leaderboards'},
-        {name: 'showRankLeaderboards',       label: 'Show "Rank" leaderboards'},
-        {name: 'alwaysShowSpoilerFlad',       label: 'Always show "Spoiler" flag'}
+        {name: 'markSolvedLanguageIcons',        label: 'Mark solved language icons'},
+        {name: 'markSolvedLanguagesInDropdown',  label: 'Mark solved languages in trainer dropdown'},
+        {name: 'additionalSearchFilters',        label: 'Additional search filters'},
+        {name: 'showSolutionsTabs',              label: 'Show solutions in tabs'},
+        {name: 'showPreviousSolutionsTabs',      label: 'Show previous solutions in tabs'},
+        {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
+        {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
+        {name: 'scrollLeaderboard',              label: 'Scroll leaderboards'},
+        {name: 'showRankLeaderboards',           label: 'Show "Rank" leaderboards'},
+        {name: 'alwaysShowSpoilerFlad',          label: 'Always show "Spoiler" flag'}
     ];
 
+    function glotGetOption(optionName) {
+        alert(optionName);
+        return optionName[0] == 's';
+    }
+
+    function glotSetOption(optionName) {
+        alert('Setting option ' + optionName);
+    }
+
     function makeBox({name, label}) {
-        return `<input type="checkbox" id="glotSetting_${name}" name="${name}"><label for="glotSetting_${name}">${label}</label>`
+        const cbId = `glotSetting_${name}`;
+        return `<input type="checkbox" id="${cbId}" name="${name}"><label for="glotSetting_${name}">${label}</label>`
     }
 
     function makeHtmlBoxes(boxes) {
         return boxes.map(makeBox).join('</br>');
+    }
+
+    function attachBoxListeners(boxes) {
+        boxes.forEach(({ name }) => {
+            const cbId = `glotSetting_${name}`;
+            const cbox = jQuery('#'+ cbId);
+            cbox.prop("checked", glotGetOption(name));
+            cbox.change(function() { glotSetOption(name) });
+        });
     }
 
     jQuery('body').append(`
@@ -675,11 +694,20 @@ function buildPolyglotConfigMenu(menu) {
         </fieldset>
       </form>
     </div>`);
+
+    attachBoxListeners(checkBoxes);
+
     dialog = jQuery('#glotSettingsDialog').dialog({
       autoOpen: false,
       height: 400,
       width: 350,
-      modal: true
+      modal: true,
+      buttons: [
+          {
+              text: "OK",
+              click: function() { $( this ).dialog( "close" ); }
+          }
+      ]
     });
     jQuery('#glotSettingsLink').click(function() { dialog.dialog('open'); });
 }
