@@ -576,105 +576,55 @@ function buildLanguagesLeaderboardTab() {
     });
 }
 
-/********************************
- *          DOM Listeners        *
- *********************************/
-
-jQuery(document).arrive("div.list-item-kata", { existing: true }, function() {
-    kataAppeared(this);
-});
-
-jQuery(document).arrive("#language_dd", { existing: true }, function() {
-    highlightDropdownLangs(this);
-});
-
-jQuery(document).arrive("#filters", { existing: true }, function() {
-    setUpForm(this);
-});
-jQuery(document).leave("#filters", { existing: true }, function() {
-    highlightConfig = "all";
-    highlightLang = "";
-});
-
-jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true }, function() {
-    if (!fetchInProgress) {
-        fetchInProgress = true;
-        jQuery.notify("Fetching solved languages...", "info");
-
-        let tabs = jQuery(this.parentElement.parentElement.parentElement.previousElementSibling.firstElementChild);
-        let href = tabs.find("dd.is-active > a").attr("href");
-        updateSolutions(0);
-    }
-});
-
-jQuery(document).arrive("div.list-item-solutions", { existing: true, onceOnly: false }, function() {
-    tabidizeByLanguage(this);
-});
-
-jQuery(document).arrive('li[data-tab="solutions"]', { existing: true, onceOnly: false }, function() {
-    tabidizePastSolutions(this);
-});
-
-jQuery(document).arrive("li.is-auto-hidden", { existing: true }, function() {
-    jQuery(this).css("opacity", "1");
-});
-
-jQuery(document).arrive("code", { existing: true }, function() {
-    addCopyButton(this);
-});
-
-jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
-    let elem = jQuery(this);
-    elem.attr("href", "/users/leaderboard/kata");
-});
-
-jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
-    if(jQuery(elem).text() == 'Leaderboards') {
-        buildLanguagesLeaderboardTab();
-    }
-});
-
-jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
-    if (!isElementInViewport(this)) {
-        this.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-});
-
 
 /*  Settings  */
+
+const checkBoxes = [
+    {name: 'markSolvedLanguageIcons',        label: 'Mark solved language icons'},
+    {name: 'markSolvedLanguagesInDropdown',  label: 'Mark solved languages in trainer dropdown'},
+    {name: 'additionalSearchFilters',        label: 'Additional search filters'},
+    {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
+    {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
+    {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
+    {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
+    {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
+    {name: 'showRankLeaderboards',           label: 'Show "Rank" leaderboards'},
+    {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'}
+];
+
+const glotSettingsKey = 'glot.settings';
+
+function getOrCreateSettingsObj() {
+    let configObj = GM_getValue(glotSettingsKey);
+    if(!configObj) {
+        configObj = {};
+        checkBoxes.forEach(({name})=>{configObj[name] = true });
+    }
+    return configObj;
+}
+
+function glotGetOption(optionName) {
+    return getOrCreateSettingsObj()[optionName];
+}
+
+function glotSetOption(optionName) {
+    let settingsObj = getOrCreateSettingsObj();
+    settingsObj[optionName] = jQuery(`#glotSetting_${optionName}`).prop('checked');
+    GM_setValue(glotSettingsKey, settingsObj);
+}
+
 var dialog
 function buildPolyglotConfigMenu(menu) {
-    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text "/>Polyglot Settings</a></li>`);
 
-    const checkBoxes = [
-        {name: 'markSolvedLanguageIcons',        label: 'Mark solved language icons'},
-        {name: 'markSolvedLanguagesInDropdown',  label: 'Mark solved languages in trainer dropdown'},
-        {name: 'additionalSearchFilters',        label: 'Additional search filters'},
-        {name: 'showSolutionsTabs',              label: 'Show solutions in tabs'},
-        {name: 'showPreviousSolutionsTabs',      label: 'Show previous solutions in tabs'},
-        {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
-        {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
-        {name: 'scrollLeaderboard',              label: 'Scroll leaderboards'},
-        {name: 'showRankLeaderboards',           label: 'Show "Rank" leaderboards'},
-        {name: 'alwaysShowSpoilerFlad',          label: 'Always show "Spoiler" flag'}
-    ];
-
-    function glotGetOption(optionName) {
-        alert(optionName);
-        return optionName[0] == 's';
-    }
-
-    function glotSetOption(optionName) {
-        alert('Setting option ' + optionName);
-    }
+    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
 
     function makeBox({name, label}) {
         const cbId = `glotSetting_${name}`;
-        return `<input type="checkbox" id="${cbId}" name="${name}"><label for="glotSetting_${name}">${label}</label>`
+        return `<tr><td style='vertical-align: baseline;'><input type="checkbox" id="${cbId}" name="${name}"></td><td><label for="glotSetting_${name}" >${label}</label></td></tr>`
     }
 
     function makeHtmlBoxes(boxes) {
-        return boxes.map(makeBox).join('</br>');
+        return boxes.map(makeBox).join('');
     }
 
     function attachBoxListeners(boxes) {
@@ -687,10 +637,12 @@ function buildPolyglotConfigMenu(menu) {
     }
 
     jQuery('body').append(`
-    <div id='glotSettingsDialog'>
+    <div id='glotSettingsDialog' title='Polyglot Settings'>
       <form>
         <fieldset>
-          ${makeHtmlBoxes(checkBoxes)}
+          <table style='border-spacing: 5px; border-collapse: separate;'>
+            ${makeHtmlBoxes(checkBoxes)}
+          </table>
         </fieldset>
       </form>
     </div>`);
@@ -699,13 +651,13 @@ function buildPolyglotConfigMenu(menu) {
 
     dialog = jQuery('#glotSettingsDialog').dialog({
       autoOpen: false,
-      height: 400,
-      width: 350,
+      // height: 400,
+      width: 500,
       modal: true,
       buttons: [
           {
               text: "OK",
-              click: function() { $( this ).dialog( "close" ); }
+              click: function() { jQuery(this).dialog("close"); }
           }
       ]
     });
@@ -713,6 +665,113 @@ function buildPolyglotConfigMenu(menu) {
 }
 
 
+/********************************
+ *          DOM Listeners        *
+ *********************************/
+
+jQuery(document).arrive("div.list-item-kata", { existing: true }, function() {
+
+    if(!glotGetOption('markSolvedLanguageIcons'))
+        return;
+
+    kataAppeared(this);
+});
+
+jQuery(document).arrive("#language_dd", { existing: true }, function() {
+
+    if(!glotGetOption('markSolvedLanguagesInDropdown'))
+        return;
+
+    highlightDropdownLangs(this);
+});
+
+jQuery(document).arrive("#filters", { existing: true }, function() {
+
+    if(!glotGetOption('additionalSearchFilters'))
+        return;
+
+    setUpForm(this);
+});
+jQuery(document).leave("#filters", { existing: true }, function() {
+    highlightConfig = "all";
+    highlightLang = "";
+});
+
+jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true }, function() {
+
+    if(!glotGetOption('markSolvedLanguageIcons') && !glotGetOption('markSolvedLanguagesInDropdown'))
+        return;
+
+    if (!fetchInProgress) {
+        fetchInProgress = true;
+        jQuery.notify("Fetching solved languages...", "info");
+
+        let tabs = jQuery(this.parentElement.parentElement.parentElement.previousElementSibling.firstElementChild);
+        let href = tabs.find("dd.is-active > a").attr("href");
+        updateSolutions(0);
+    }
+});
+
+jQuery(document).arrive("div.list-item-solutions", { existing: true, onceOnly: false }, function() {
+
+    if(!glotGetOption('showSolutionsTabs'))
+        return;
+
+    tabidizeByLanguage(this);
+});
+
+jQuery(document).arrive('li[data-tab="solutions"]', { existing: true, onceOnly: false }, function() {
+
+    if(!glotGetOption('showPastSolutionsTabs'))
+        return;
+
+    tabidizePastSolutions(this);
+});
+
+jQuery(document).arrive("li.is-auto-hidden", { existing: true }, function() {
+
+    if(!glotGetOption('alwaysShowSpoilerFlag'))
+        return;
+
+    jQuery(this).css("opacity", "1");
+});
+
+jQuery(document).arrive("code", { existing: true }, function() {
+
+    if(!glotGetOption('showCopyToClipboardButtons'))
+        return;
+
+    addCopyButton(this);
+});
+
+jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
+
+    if(!glotGetOption('preferCompletedKataLeaderboard'))
+        return;
+
+    let elem = jQuery(this);
+    elem.attr("href", "/users/leaderboard/kata");
+});
+
+jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
+
+    if(!glotGetOption('showRankLeaderboards'))
+        return;
+
+    if(jQuery(elem).text() == 'Leaderboards') {
+        buildLanguagesLeaderboardTab();
+    }
+});
+
+jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
+
+    if(!glotGetOption('scrollLeaderboard'))
+        return;
+
+    if (!isElementInViewport(this)) {
+        this.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+});
 
 jQuery(document).arrive("a.js-sign-out", { existing: true }, function() {
     buildPolyglotConfigMenu(this.parentElement.parentElement);
