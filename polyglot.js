@@ -613,11 +613,9 @@ function glotSetOption(optionName) {
     GM_setValue(glotSettingsKey, settingsObj);
 }
 
-var dialog
-function buildPolyglotConfigMenu(menu) {
+var dialog = undefined;
 
-    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
-
+function buildConfigDialog() {
     function makeBox({name, label}) {
         const cbId = `glotSetting_${name}`;
         return `<tr><td style='vertical-align: baseline;'><input type="checkbox" id="${cbId}" name="${name}"></td><td><label for="glotSetting_${name}" >${label}</label></td></tr>`
@@ -649,7 +647,7 @@ function buildPolyglotConfigMenu(menu) {
 
     attachBoxListeners(checkBoxes);
 
-    dialog = jQuery('#glotSettingsDialog').dialog({
+    return jQuery('#glotSettingsDialog').dialog({
       autoOpen: false,
       // height: 400,
       width: 500,
@@ -661,7 +659,19 @@ function buildPolyglotConfigMenu(menu) {
           }
       ]
     });
-    jQuery('#glotSettingsLink').click(function() { dialog.dialog('open'); });
+}
+
+
+function getPolyglotConfigDialog() {
+    if(!dialog) {
+        dialog = buildConfigDialog();
+    }
+    return dialog;
+}
+
+function buildPolyglotConfigMenu(menu) {
+    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
+    jQuery('#glotSettingsLink').click(function() { getPolyglotConfigDialog().dialog('open'); });
 }
 
 
@@ -671,25 +681,27 @@ function buildPolyglotConfigMenu(menu) {
 
 jQuery(document).arrive("div.list-item-kata", { existing: true }, function() {
 
-    if(!glotGetOption('markSolvedLanguageIcons'))
+    if(!glotGetOption('markSolvedLanguageIcons')) {
         return;
+    }
 
     kataAppeared(this);
 });
 
 jQuery(document).arrive("#language_dd", { existing: true }, function() {
 
-    if(!glotGetOption('markSolvedLanguagesInDropdown'))
+    if(!glotGetOption('markSolvedLanguagesInDropdown')) {
         return;
+    }
 
     highlightDropdownLangs(this);
 });
 
 jQuery(document).arrive("#filters", { existing: true }, function() {
 
-    if(!glotGetOption('additionalSearchFilters'))
+    if(!glotGetOption('additionalSearchFilters')) {
         return;
-
+    }
     setUpForm(this);
 });
 jQuery(document).leave("#filters", { existing: true }, function() {
@@ -699,9 +711,9 @@ jQuery(document).leave("#filters", { existing: true }, function() {
 
 jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true }, function() {
 
-    if(!glotGetOption('markSolvedLanguageIcons') && !glotGetOption('markSolvedLanguagesInDropdown'))
+    if(!glotGetOption('markSolvedLanguageIcons') && !glotGetOption('markSolvedLanguagesInDropdown')) {
         return;
-
+    }
     if (!fetchInProgress) {
         fetchInProgress = true;
         jQuery.notify("Fetching solved languages...", "info");
@@ -714,50 +726,50 @@ jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true 
 
 jQuery(document).arrive("div.list-item-solutions", { existing: true, onceOnly: false }, function() {
 
-    if(!glotGetOption('showSolutionsTabs'))
+    if(!glotGetOption('showSolutionsTabs')) {
         return;
-
+    }
     tabidizeByLanguage(this);
 });
 
 jQuery(document).arrive('li[data-tab="solutions"]', { existing: true, onceOnly: false }, function() {
 
-    if(!glotGetOption('showPastSolutionsTabs'))
+    if(!glotGetOption('showPastSolutionsTabs')) {
         return;
-
+    }
     tabidizePastSolutions(this);
 });
 
 jQuery(document).arrive("li.is-auto-hidden", { existing: true }, function() {
 
-    if(!glotGetOption('alwaysShowSpoilerFlag'))
+    if(!glotGetOption('alwaysShowSpoilerFlag')) {
         return;
-
+    }
     jQuery(this).css("opacity", "1");
 });
 
 jQuery(document).arrive("code", { existing: true }, function() {
 
-    if(!glotGetOption('showCopyToClipboardButtons'))
+    if(!glotGetOption('showCopyToClipboardButtons')) {
         return;
-
+    }
     addCopyButton(this);
 });
 
 jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
 
-    if(!glotGetOption('preferCompletedKataLeaderboard'))
+    if(!glotGetOption('preferCompletedKataLeaderboard')) {
         return;
-
+    }
     let elem = jQuery(this);
     elem.attr("href", "/users/leaderboard/kata");
 });
 
 jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
 
-    if(!glotGetOption('showRankLeaderboards'))
+    if(!glotGetOption('showRankLeaderboards')) {
         return;
-
+    }
     if(jQuery(elem).text() == 'Leaderboards') {
         buildLanguagesLeaderboardTab();
     }
@@ -765,9 +777,9 @@ jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
 
 jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
 
-    if(!glotGetOption('scrollLeaderboard'))
+    if(!glotGetOption('scrollLeaderboard')) {
         return;
-
+    }
     if (!isElementInViewport(this)) {
         this.scrollIntoView({ behavior: "smooth", block: "center" });
     }
