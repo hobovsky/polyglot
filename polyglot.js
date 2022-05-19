@@ -97,6 +97,7 @@ WHERE CAN I DOWNLOAD IT FROM?
  - StackOverflow
  - jQuery
  - notify.js
+
 ****************************************************************/
 
 /* globals jQuery, $, waitForKeyElements, App */
@@ -577,8 +578,9 @@ function buildLanguagesLeaderboardTab() {
 }
 
 
-/*  Settings  */
-
+/********************************
+ *           Settings           *
+ *********************************/
 const checkBoxes = [
     {name: 'markSolvedLanguageIcons',        label: 'Mark solved language icons'},
     {name: 'markSolvedLanguagesInDropdown',  label: 'Mark solved languages in trainer dropdown'},
@@ -643,6 +645,7 @@ function buildConfigDialog() {
           </table>
         </fieldset>
       </form>
+      <p><b>Note:</b> some settings are applied after refresh.</p>
     </div>`);
 
     attachBoxListeners(checkBoxes);
