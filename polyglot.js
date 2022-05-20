@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.17
+// @version 1.13.18
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -102,12 +102,13 @@ WHERE CAN I DOWNLOAD IT FROM?
 
 /* globals jQuery, $, waitForKeyElements, App */
 var $ = window.jQuery;
+const JQUERYUI_CSS_URL = '//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/dark-hive/jquery-ui.min.css';
 
 $.noConflict();
 
 const DROPDOWN_STYLE_CLASS = 'mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md';
 
-jQuery("head").append("<link " + 'href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/dark-hive/jquery-ui.min.css" ' + 'rel="stylesheet" type="text/css">');
+jQuery("head").append(`<link href="${JQUERYUI_CSS_URL}" rel="stylesheet" type="text/css">`);
 
 function isElementInViewport(el) {
     if (typeof jQuery === "function" && el instanceof jQuery) {
@@ -180,25 +181,6 @@ function updateSolutions(pageNo) {
     GM_xmlhttpRequest(opts);
 }
 
-function dimSolved(elem) {
-    let id =
-        elem.id ||
-        jQuery(elem)
-            .children("div.flex.flex-col")
-            .children("div.w-full")
-            .children("div.mt-1.mb-3")
-            .attr("data-id");
-    if (!id) return;
-    let langs = GM_getValue("glot.katalangs." + id, []);
-    for (let lang of langs) {
-        jQuery(elem)
-            .find("a[data-language='" + lang + "']")
-            .children("div")
-            .children("i")
-            .addClass("glotDimmed");
-    }
-}
-
 function highlightDropdownLangs(divLangSelector) {
     divLangSelector = jQuery(divLangSelector);
     let kataHref = divLangSelector
@@ -217,81 +199,6 @@ function highlightDropdownLangs(divLangSelector) {
     }
 }
 
-/********************************
- *           Search result       *
- *********************************/
-
-let topUpInProgress = false;
-function toppedUp(resp) {
-    if (resp.readyState !== 4) return;
-    topUpInProgress = false;
-    let cwResp = resp.responseText;
-    let toAppend = jQuery.parseHTML(cwResp);
-    let kataList = jQuery(toAppend).find("div.list-item-kata");
-    if (!kataList.length) {
-        jQuery.notify("No more kata available.", "info");
-        return;
-    }
-    let marker = jQuery("div.js-infinite-marker");
-    marker.before(kataList);
-    let vsb = isElementInViewport(marker);
-    if (vsb) {
-        topUpList(marker);
-    }
-}
-
-function topUpList(marker) {
-    if (topUpInProgress) {
-        return;
-    }
-
-    let nextPage = marker.data("page");
-    let ub = new App.UriBuilder();
-    ub.params.page = nextPage;
-    marker.data("page", nextPage + 1);
-    marker.attr("data-page", nextPage + 1);
-    let url = ub.build();
-    let opts = {
-        method: "GET",
-        url: url,
-        onreadystatechange: toppedUp
-    };
-    GM_xmlhttpRequest(opts);
-    jQuery.notify("Downloading page " + nextPage + " of available kata...", "info");
-    topUpInProgress = true;
-}
-
-function removeFromSearch(kata) {
-    jQuery(kata).hide();
-    let marker = jQuery("div.js-infinite-marker");
-    if (!marker || !marker.length) {
-        return;
-    }
-    let vsb = isElementInViewport(marker);
-    if (vsb) {
-        topUpList(marker);
-    }
-}
-function addToSearch(kata) {
-    jQuery(kata).show();
-}
-
-let highlightConfig = "all";
-let highlightLang = "";
-function shouldHighlight(elem) {
-    if (!elem.id || !highlightConfig || highlightConfig == "all" || !highlightLang || highlightLang == "" || highlightLang === "my-languages") return true;
-
-    let langs = GM_getValue("glot.katalangs." + elem.id, []);
-
-    if (highlightConfig == "not_solved") {
-        return !langs.some(lg => lg == highlightLang);
-    } else if (highlightConfig == "solved") {
-        return langs.some(lg => lg == highlightLang);
-    }
-    console.warn("Unrecognized highlightConfig: " + highlightConfig);
-    return false;
-}
-
 let css = `
 .glotDimmed {
   -webkit-filter: grayscale(0.8) blur(1px);
@@ -305,66 +212,6 @@ let css = `
 }
 `;
 GM_addStyle(css);
-
-function kataAppeared(elem) {
-    if (shouldHighlight(elem)) {
-        addToSearch(elem);
-    } else {
-        removeFromSearch(elem);
-    }
-
-    dimSolved(elem);
-}
-
-function reHighlight() {
-    jQuery("div.list-item-kata").each(function() {
-        kataAppeared(this);
-    });
-}
-
-/********************************
- *           Filter form         *
- *********************************/
-
-function setUpHighlightConfig() {
-    let form = jQuery("#filters");
-    highlightLang = form.find("#language_filter>option:selected").val();
-    if (!highlightLang || highlightLang === "" || highlightLang === "my-languages") {
-        highlightConfig = "all";
-        highlightLang = "";
-        return;
-    }
-    highlightConfig = jQuery("#glotCmbHighlight>option:selected").val();
-}
-
-
-function setUpForm(form) {
-  form = jQuery(form)
-  form.find('select').change(setUpHighlightConfig)
-
-  const sel = form.find('#language_filter>option:selected')
-  const langVal = sel.val()
-  const lang = sel.text()
-  if (lang && langVal !== '' && langVal !== 'my-languages') {
-    jQuery('div.list-item-kata:first').before(
-      `${'<form id="dummy_form">'
-        + `<select id="glotCmbHighlight" class="${DROPDOWN_STYLE_CLASS}">`
-          + '<option value = "all">Show all</option>'
-          + '<option value = "solved">Show kata I\'ve solved in '}${lang}</option>`
-          + `<option value = "not_solved">Show kata I haven't solved in ${lang}</option>`
-        + '</select>'
-      + '</form>')
-    const cmbHc = jQuery('#glotCmbHighlight')
-    cmbHc.change(setUpHighlightConfig)
-    cmbHc.change(reHighlight)
-    if (highlightConfig === 'solved' || highlightConfig === 'not_solved') {
-      cmbHc.val(highlightConfig)
-    }
-  }
-
-  setUpHighlightConfig()
-}
-
 
 /********************************
  *            Clipboard          *
@@ -582,9 +429,7 @@ function buildLanguagesLeaderboardTab() {
  *           Settings           *
  *********************************/
 const checkBoxes = [
-    {name: 'markSolvedLanguageIcons',        label: 'Mark solved language icons'},
     {name: 'markSolvedLanguagesInDropdown',  label: 'Mark solved languages in trainer dropdown'},
-    {name: 'additionalSearchFilters',        label: 'Additional search filters'},
     {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
     {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
     {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
@@ -682,15 +527,6 @@ function buildPolyglotConfigMenu(menu) {
  *          DOM Listeners        *
  *********************************/
 
-jQuery(document).arrive("div.list-item-kata", { existing: true }, function() {
-
-    if(!glotGetOption('markSolvedLanguageIcons')) {
-        return;
-    }
-
-    kataAppeared(this);
-});
-
 jQuery(document).arrive("#language_dd", { existing: true }, function() {
 
     if(!glotGetOption('markSolvedLanguagesInDropdown')) {
@@ -700,21 +536,9 @@ jQuery(document).arrive("#language_dd", { existing: true }, function() {
     highlightDropdownLangs(this);
 });
 
-jQuery(document).arrive("#filters", { existing: true }, function() {
-
-    if(!glotGetOption('additionalSearchFilters')) {
-        return;
-    }
-    setUpForm(this);
-});
-jQuery(document).leave("#filters", { existing: true }, function() {
-    highlightConfig = "all";
-    highlightLang = "";
-});
-
 jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true }, function() {
 
-    if(!glotGetOption('markSolvedLanguageIcons') && !glotGetOption('markSolvedLanguagesInDropdown')) {
+    if(!glotGetOption('markSolvedLanguagesInDropdown')) {
         return;
     }
     if (!fetchInProgress) {
