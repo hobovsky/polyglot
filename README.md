@@ -21,12 +21,7 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
- - All 'available language' icons show whether you've completed
-   given kata in some particular language. Languages are marked
-   also in language selection dropdowns.
- - When you filter kata search results by a language of your choice,
-   additional filter option appears which lets you see which kata
-   you have or haven't completed in this language.
+ - Solved languages are marked in language selection dropdowns.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
@@ -38,13 +33,6 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Leaderboards: Rank leaderboards utilizing Codewars API, to show users
    ranked by overall rank or a language rank.
 
- Features removed from Polyglot as they got implemented directly on Codewars:
- - ~~"Show Kata Description" and "Show Kata Test Cases" sections can be toggled
-   now and can be collapsed after once expanded.~~
- - ~~Show "Translations" tab on kata page and kata tabs on "/kata/####/translations"
-   page.~~
- 
-
  HOW TO UNINSTALL IT?
 --------------------
  I haven't checked.
@@ -53,8 +41,6 @@ WHERE CAN I DOWNLOAD IT FROM?
 ------------
  - Yes.
  - A race condition here or there.
- - Filters do not properly reset sometimes.
- - Sometimes search results may contain duplicated pages.
  - Selectors, hooks and listeners used are so inefficient that your local power
    plant probably doubles its coal consumption.
 
@@ -81,4 +67,3 @@ WHERE CAN I DOWNLOAD IT FROM?
  - StackOverflow
  - jQuery
  - notify.js
- 
