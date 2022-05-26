@@ -552,10 +552,8 @@ const leaderboardScrollView=function(){
 const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
-    [kataAppeared,            "div.list-item-kata",                   {existing},           ['markSolvedLanguageIcons']],
     [highlightDropdownLangs,  "#language_dd",                         {existing},           ['markSolvedLanguagesInDropdown']],
-    [setUpForm,               "#filters",                             {existing},           ['additionalSearchFilters']],
-    [solutionsFetchAndUpdate, "div.list-item-solutions:first-child",  {existing},           ['markSolvedLanguageIcons', 'markSolvedLanguagesInDropdown']],
+    [solutionsFetchAndUpdate, "div.list-item-solutions:first-child",  {existing},           ['markSolvedLanguagesInDropdown']],
     [tabidizeByLanguage,      "div.list-item-solutions",              {existing, onceOnly}, ['showSolutionsTabs']],
     [tabidizePastSolutions,   'li[data-tab="solutions"]',             {existing, onceOnly}, ['showPastSolutionsTabs']],
     [spoilerFlagOpacityChange,'li.is-auto-hidden',                    {existing},           ['alwaysShowSpoilerFlag']],
