@@ -509,24 +509,13 @@ function buildPolyglotConfigMenu(menu) {
 }
 
 
+
 /********************************
  *          DOM Listeners        *
  *********************************/
 
-jQuery(document).arrive("#language_dd", { existing: true }, function() {
+const solutionsFetchAndUpdate=function(){
 
-    if(!glotGetOption('markSolvedLanguagesInDropdown')) {
-        return;
-    }
-
-    highlightDropdownLangs(this);
-});
-
-jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true }, function() {
-
-    if(!glotGetOption('markSolvedLanguagesInDropdown')) {
-        return;
-    }
     if (!fetchInProgress) {
         fetchInProgress = true;
         jQuery.notify("Fetching solved languages...", "info");
@@ -535,70 +524,53 @@ jQuery(document).arrive("div.list-item-solutions:first-child", { existing: true 
         let href = tabs.find("dd.is-active > a").attr("href");
         updateSolutions(0);
     }
-});
+}
 
-jQuery(document).arrive("div.list-item-solutions", { existing: true, onceOnly: false }, function() {
-
-    if(!glotGetOption('showSolutionsTabs')) {
-        return;
-    }
-    tabidizeByLanguage(this);
-});
-
-jQuery(document).arrive('li[data-tab="solutions"]', { existing: true, onceOnly: false }, function() {
-
-    if(!glotGetOption('showPastSolutionsTabs')) {
-        return;
-    }
-    tabidizePastSolutions(this);
-});
-
-jQuery(document).arrive("li.is-auto-hidden", { existing: true }, function() {
-
-    if(!glotGetOption('alwaysShowSpoilerFlag')) {
-        return;
-    }
+const spoilerFlagOpacityChange=function(){
     jQuery(this).css("opacity", "1");
-});
+}
 
-jQuery(document).arrive("code", { existing: true }, function() {
-
-    if(!glotGetOption('showCopyToClipboardButtons')) {
-        return;
-    }
-    addCopyButton(this);
-});
-
-jQuery(document).arrive('a[title="Leaders"]', { existing: true }, function() {
-
-    if(!glotGetOption('preferCompletedKataLeaderboard')) {
-        return;
-    }
+const leaderboardRedirection=function(){
     let elem = jQuery(this);
     elem.attr("href", "/users/leaderboard/kata");
-});
+}
 
-jQuery(document).arrive("h1.page-title", { existing: true }, function(elem) {
-
-    if(!glotGetOption('showRankLeaderboards')) {
-        return;
-    }
-    if(jQuery(elem).text() == 'Leaderboards') {
+const languageLeaderboards=function(){
+    if(jQuery(this).text() == 'Leaderboards') {
         buildLanguagesLeaderboardTab();
     }
-});
+}
 
-jQuery(document).arrive("tr.is-current-player", { existing: true }, function() {
-
-    if(!glotGetOption('scrollLeaderboard')) {
-        return;
-    }
+const leaderboardScrollView=function(){
     if (!isElementInViewport(this)) {
         this.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-});
+}
 
-jQuery(document).arrive("a.js-sign-out", { existing: true }, function() {
-    buildPolyglotConfigMenu(this.parentElement.parentElement);
-});
 
+
+const existing=true, onceOnly=false;
+
+const LISTENERS_CONFIG = [
+    [highlightDropdownLangs,  "#language_dd",                         {existing},           ['markSolvedLanguagesInDropdown']],
+    [solutionsFetchAndUpdate, "div.list-item-solutions:first-child",  {existing},           ['markSolvedLanguagesInDropdown']],
+    [tabidizeByLanguage,      "div.list-item-solutions",              {existing, onceOnly}, ['showSolutionsTabs']],
+    [tabidizePastSolutions,   'li[data-tab="solutions"]',             {existing, onceOnly}, ['showPastSolutionsTabs']],
+    [spoilerFlagOpacityChange,'li.is-auto-hidden',                    {existing},           ['alwaysShowSpoilerFlag']],
+    [addCopyButton,           'code',                                 {existing},           ['showCopyToClipboardButtons']],
+    [leaderboardRedirection,  'a[title="Leaders"]',                   {existing},           ['preferCompletedKataLeaderboard']],
+    [languageLeaderboards,    'h1.page-title',                        {existing},           ['showRankLeaderboards']],
+    [leaderboardScrollView,   'tr.is-current-player',                 {existing},           ['scrollLeaderboard']],
+    [buildPolyglotConfigMenu, 'a.js-sign-out',                        {existing},           []],
+];
+
+
+for(const [func, target, options, conditions] of LISTENERS_CONFIG){
+    jQuery(document).arrive(target, options, function() {
+        if(conditions.length && conditions.every(prop => !glotGetOption(prop))){
+            return;
+        }
+        const arg = func !== buildPolyglotConfigMenu ? this : this.parentElement.parentElement;
+        func.call(this, arg)
+    });
+}
