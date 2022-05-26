@@ -574,9 +574,3 @@ for(const [func, target, options, conditions] of LISTENERS_CONFIG){
         func.call(this, arg)
     });
 }
-
-jQuery(document).leave("#filters", { existing: true }, function() {
-    highlightConfig = "all";
-    highlightLang = "";
-});
-
