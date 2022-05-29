@@ -21,7 +21,6 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
- - Solved languages are marked in language selection dropdowns.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
@@ -67,3 +66,4 @@ WHERE CAN I DOWNLOAD IT FROM?
  - StackOverflow
  - jQuery
  - notify.js
+ 
