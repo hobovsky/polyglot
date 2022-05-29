@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    CodeWars - Mark solved languages
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.18
+// @version 1.13.19
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @include https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
@@ -37,7 +37,6 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
- - Solved languages are marked in language selection dropdowns.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
@@ -106,17 +105,6 @@ function isElementInViewport(el) {
     return rect.top >= 0 && rect.left >= 0 && rect.bottom <= wnd.height() && rect.right <= wnd.width();
 }
 
-/********************************
- *          Solved languages     *
- *********************************/
-
-function store(data) {
-    for (let kata of data) {
-        GM_setValue("glot.katalangs." + kata.id, kata.completedLanguages);
-    }
-}
-
-let fetchInProgress = false;
 let userName = null;
 function getUserName() {
     if (!userName) {
@@ -128,67 +116,7 @@ function getUserName() {
     return userName;
 }
 
-function solutionsPageDownloaded(resp) {
-    if (resp.readyState !== 4) return;
-    resp.context = resp.context || 0;
-    let cwResp = resp.response;
-    store(cwResp.data);
-    jQuery.notify("Downloaded page " + (resp.context + 1) + " of " + cwResp.totalPages, "success");
-    if (resp.context) {
-        if (resp.context + 1 == cwResp.totalPages) {
-            fetchInProgress = false;
-        }
-        return;
-    }
-    for (let i = 1; i < cwResp.totalPages; ++i) {
-        updateSolutions(i);
-    }
-}
-
-function updateSolutions(pageNo) {
-    let url = "/api/v1/users/" + getUserName() + "/code-challenges/completed?page=";
-    function fetchAborted() {
-        fetchInProgress = false;
-        jQuery.notify("Fetch aborted.", "info");
-    }
-    function fetchError() {
-        fetchInProgress = false;
-        jQuery.notify("ERROR!", "error");
-    }
-    let opts = {
-        method: "GET",
-        url: url + (pageNo || 0),
-        onreadystatechange: solutionsPageDownloaded,
-        onabort: fetchAborted,
-        onerror: fetchError,
-        context: pageNo || 0,
-        responseType: "json"
-    };
-    GM_xmlhttpRequest(opts);
-}
-
-function highlightDropdownLangs(divLangSelector) {
-    divLangSelector = jQuery(divLangSelector);
-    let kataHref = divLangSelector
-        .find("dl>dd[data-href]")
-        .first()
-        .data("href");
-    let kataId = kataHref.split("/")[2];
-    let langs = GM_getValue("glot.katalangs." + kataId, []);
-
-    let itemByLang = new Map();
-    divLangSelector.find("dl>dd[data-value]").each((i, e) => itemByLang.set(e.dataset.value, e));
-
-    for (let lang of langs) {
-        let langElem = itemByLang.get(lang);
-        jQuery(langElem).addClass("glotDimmed");
-    }
-}
-
 let css = `
-.glotDimmed {
-  -webkit-filter: grayscale(0.8) blur(1px);
-}
 .glotBtnCopy {
     margin-top: 1px;
     margin-right: 2px;
@@ -415,7 +343,6 @@ function buildLanguagesLeaderboardTab() {
  *           Settings           *
  *********************************/
 const checkBoxes = [
-    {name: 'markSolvedLanguagesInDropdown',  label: 'Mark solved languages in trainer dropdown'},
     {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
     {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
     {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
@@ -509,22 +436,9 @@ function buildPolyglotConfigMenu(menu) {
 }
 
 
-
 /********************************
  *          DOM Listeners        *
  *********************************/
-
-const solutionsFetchAndUpdate=function(){
-
-    if (!fetchInProgress) {
-        fetchInProgress = true;
-        jQuery.notify("Fetching solved languages...", "info");
-
-        let tabs = jQuery(this.parentElement.parentElement.parentElement.previousElementSibling.firstElementChild);
-        let href = tabs.find("dd.is-active > a").attr("href");
-        updateSolutions(0);
-    }
-}
 
 const spoilerFlagOpacityChange=function(){
     jQuery(this).css("opacity", "1");
@@ -547,13 +461,9 @@ const leaderboardScrollView=function(){
     }
 }
 
-
-
 const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
-    [highlightDropdownLangs,  "#language_dd",                         {existing},           ['markSolvedLanguagesInDropdown']],
-    [solutionsFetchAndUpdate, "div.list-item-solutions:first-child",  {existing},           ['markSolvedLanguagesInDropdown']],
     [tabidizeByLanguage,      "div.list-item-solutions",              {existing, onceOnly}, ['showSolutionsTabs']],
     [tabidizePastSolutions,   'li[data-tab="solutions"]',             {existing, onceOnly}, ['showPastSolutionsTabs']],
     [spoilerFlagOpacityChange,'li.is-auto-hidden',                    {existing},           ['alwaysShowSpoilerFlag']],
