@@ -333,6 +333,12 @@ function buildLanguagesLeaderboardTab() {
         if(jQuery('#glotLanguagesDropdown').length) return;
         jQuery('dd.is-active').removeClass('is-active');
         jQuery('#glotLanguagesLeaderboardTab').addClass('is-active');
+
+        let tbody = jQuery('div.leaderboard table tbody');
+        let tr = tbody.children('tr')[0];
+        let th = tr.children[3];
+        jQuery(th).text('Rank');
+
         buildLanguagesDropdown();
         buildLeaderboard('overall', [], 1);
     });
