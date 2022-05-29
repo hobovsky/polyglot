@@ -261,8 +261,9 @@ function leaderboardDownloaded(resp) {
     let cwResp = resp.response;
     const leaderboardEntries = cwResp.data;
     const {lang, collected, page} = resp.context;
-    if(leaderboardEntries && leaderboardEntries.length) {
-        collected.push(...leaderboardEntries);
+    collected.push(...leaderboardEntries);
+
+    if(page < 10 && leaderboardEntries && leaderboardEntries.length) {
         buildLeaderboard(lang, collected, page+1);
     } else {
         fillLeaderboardRows(collected);
