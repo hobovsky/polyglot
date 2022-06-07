@@ -3,7 +3,8 @@
 // @description User script which provides some extra functionalities to Codewars
 // @version 1.13.19
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
-// @include https://www.codewars.com/*
+// @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
+// @match https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
 // @grant   GM_setValue
 // @grant   GM_getValue
