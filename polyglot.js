@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.19
+// @version 1.13.20
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -15,6 +15,7 @@
 // @require     http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
 // @require https://greasyfork.org/scripts/21927-arrive-js/code/arrivejs.js?version=198809
 // @require https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
+// @require     https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
 // ==/UserScript==
 
 /****************************************************************
@@ -33,8 +34,6 @@ WHERE CAN I DOWNLOAD IT FROM?
 ------------------
  - Install Tampermonkey extension for your browser,
  - Copy&paste the script to your scripts library.
- - Go to Solutions tab of your Codewars profile to let
-   the script fetch/update information about your solutions.
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
@@ -48,6 +47,7 @@ WHERE CAN I DOWNLOAD IT FROM?
    automatically scrolled to show your score.
  - Leaderboards: Rank leaderboards utilizing Codewars API, to show users
    ranked by overall rank or a language rank.
+ - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -83,6 +83,7 @@ WHERE CAN I DOWNLOAD IT FROM?
  - StackOverflow
  - jQuery
  - notify.js
+ - Chart.js
 
 ****************************************************************/
 
@@ -127,6 +128,43 @@ let css = `
 }
 `;
 GM_addStyle(css);
+
+function getViewedKataId() {
+    let currentUrl = window.location.href;
+    let parts = currentUrl.split('/');
+    let kataPartIdx = parts.indexOf('kata');
+    if(kataPartIdx == -1 || kataPartIdx == parts.length - 1) {
+        return null;
+    }
+    return parts[kataPartIdx + 1];
+}
+
+function isBetaKata() {
+    let rankTag = jQuery("h4").siblings('div.tag').text();
+    return rankTag === 'Beta'
+}
+
+function getRankColor(rank) {
+    switch(rank) {
+        case 1: case 2:
+        case 3: case 4: return 'black';
+        case -1: case -2: return "purple";
+        case -3: case -4: return 'blue';
+        case -5: case -6: return 'yellow';
+        default: return 'white';
+    }
+}
+
+function getRankValue(rank) { return Math.abs(rank) }
+function getRankDenom(rank) { return rank < 0 ? "kyu" : "dan" }
+function getRankLabel(rank) { return `${getRankValue(rank)} ${getRankDenom(rank)}`; }
+
+function fetchAborted() {
+    jQuery.notify("Fetch aborted.", "info");
+}
+function fetchError() {
+    jQuery.notify("ERROR!", "error");
+}
 
 /********************************
  *            Clipboard          *
@@ -221,22 +259,7 @@ function tabidizePastSolutions(liElem) {
  *       Rank Leaderboards       *
  *********************************/
 function makeRankBadge(rank) {
-
-    function getRankColor() {
-        switch(rank) {
-            case 1: case 2:
-            case 3: case 4: return 'black';
-            case -1: case -2: return "purple";
-            case -3: case -4: return 'blue';
-            case -5: case -6: return 'yellow';
-            default: return 'white';
-        }
-    }
-
-    function getRankValue() { return Math.abs(rank) }
-    function getRankDenom() { return rank < 0 ? "kyu" : "dan" }
-
-    return `<div class="small-hex is-extra-wide is-${getRankColor()}-rank float-left mt-5px mr-5"><div class="inner-small-hex is-extra-wide "><span>${getRankValue()} ${getRankDenom()}</span></div></div>`
+    return `<div class="small-hex is-extra-wide is-${getRankColor(rank)}-rank float-left mt-5px mr-5"><div class="inner-small-hex is-extra-wide "><span>${getRankLabel(rank)}</span></div></div>`
 }
 
 function getCurrentPlayerClass(leaderboardEntry) {
@@ -274,12 +297,7 @@ function leaderboardDownloaded(resp) {
 function buildLeaderboard(lang, collected, page=1) {
 
     let url = `/api/v1/leaders/ranks/${lang}?page=${page}`;
-    function fetchAborted() {
-        jQuery.notify("Fetch aborted.", "info");
-    }
-    function fetchError() {
-        jQuery.notify("ERROR!", "error");
-    }
+
     let opts = {
         method: "GET",
         url: url,
@@ -299,13 +317,8 @@ function languageChanged() {
 }
 
 function buildLanguagesDropdown() {
+
     let url = "/api/v1/languages";
-    function fetchAborted() {
-        jQuery.notify("Fetch aborted.", "info");
-    }
-    function fetchError() {
-        jQuery.notify("ERROR!", "error");
-    }
 
     function makeLangItems(langItems) {
         return langItems.map(({id, name}) => `<option value='${id}'>${name}</option>`)
@@ -346,6 +359,88 @@ function buildLanguagesLeaderboardTab() {
     });
 }
 
+/********************************
+ *       Rank assessments       *
+ *********************************/
+
+function addRankAssessmentBreakdown(breakdown, elem) {
+
+    let canvas = '<tr style="display:none" id="glotBreakdownRow"><td colspan=2><canvas id="glotChartBreakdown"/></td></tr>';
+    jQuery(elem).parent().after(canvas);
+
+    let allRanks = {};
+    for(let b of breakdown) {
+        allRanks[b.rank] = b.count;
+    }
+
+    let ranks = Array.from({length: 8}, (_,idx) => -8 + idx);
+    let labels = ranks.map(getRankLabel);
+    let yValues = ranks.map(r => allRanks[r] || 0);
+
+    let helperComputedStyles = window.getComputedStyle(document.body);
+    function getBarColor(rank) {
+        let rankColor = getRankColor(rank);
+        return helperComputedStyles.getPropertyValue(`--color-rank-${rankColor}`) || rankColor;
+    }
+    var barColors = ranks.map(getBarColor);
+
+    new Chart("glotChartBreakdown", {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                backgroundColor: barColors,
+                data: yValues,
+                label: ''
+            }]
+        },
+        options: {
+            legend: { display: false } }
+    });
+}
+
+
+function rankAssessmentsBreakdownDownloaded(resp) {
+    if (resp.readyState !== 4) return;
+    let cwResp = resp.response;
+    const breakdownEntries = cwResp.data;
+    const {kataId, elem} = resp.context;
+    addRankAssessmentBreakdown(breakdownEntries, elem);
+}
+
+function fetchRankAssessmentBreakdown(kataId, elem) {
+
+    let url = `/api/v1/code-challenges/${kataId}/assessed-ranks`;
+    let opts = {
+        method: "GET",
+        url: url,
+        onreadystatechange: rankAssessmentsBreakdownDownloaded,
+        onabort: fetchAborted,
+        onerror: fetchError,
+        context: {kataId: kataId, elem: elem },
+        responseType: "json"
+    };
+    GM_xmlhttpRequest(opts);
+    jQuery.notify(`Fetching rank assessments breakdown...`, "info");
+}
+
+function toggleRankAssessmentsBreakdown() {
+    jQuery('#glotBreakdownRow').slideToggle({duration: 400});
+}
+
+function addRankAssessmentsUi(elem) {
+
+    elem = elem.parent().find('table')[1];
+    let allCells = jQuery(elem).find('td');
+
+    let leftCell = jQuery(allCells[8]);
+    leftCell.append(' <a id="glotToggleBreakdown">(see breakdown)</a>');
+    jQuery('#glotToggleBreakdown').click(toggleRankAssessmentsBreakdown);
+
+    let kataId = getViewedKataId();
+    fetchRankAssessmentBreakdown(kataId, leftCell);
+}
+
 
 /********************************
  *           Settings           *
@@ -357,7 +452,8 @@ const checkBoxes = [
     {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
     {name: 'showRankLeaderboards',           label: 'Show "Rank" leaderboards'},
-    {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'}
+    {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
+    {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'}
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -371,8 +467,13 @@ function getOrCreateSettingsObj() {
     return configObj;
 }
 
+// new features are enabled by default
 function glotGetOption(optionName) {
-    return getOrCreateSettingsObj()[optionName];
+    let valueSet = getOrCreateSettingsObj()[optionName];
+    if(valueSet === undefined) {
+        valueSet = true;
+    }
+    return valueSet;
 }
 
 function glotSetOption(optionName) {
@@ -469,6 +570,14 @@ const leaderboardScrollView=function(){
     }
 }
 
+const processRankAssessments=function(){
+    let elem = jQuery(this);
+    if(elem.text() !== 'Stats:' || !isBetaKata()) {
+        return;
+    }
+    addRankAssessmentsUi(elem);
+}
+
 const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
@@ -479,6 +588,7 @@ const LISTENERS_CONFIG = [
     [leaderboardRedirection,  'a[title="Leaders"]',                   {existing},           ['preferCompletedKataLeaderboard']],
     [languageLeaderboards,    'h1.page-title',                        {existing},           ['showRankLeaderboards']],
     [leaderboardScrollView,   'tr.is-current-player',                 {existing},           ['scrollLeaderboard']],
+    [processRankAssessments,  'h3',                                   {existing},           ['showRankAssessments']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                        {existing},           []],
 ];
 
