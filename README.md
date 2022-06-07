@@ -16,8 +16,6 @@ WHERE CAN I DOWNLOAD IT FROM?
 ------------------
  - Install Tampermonkey extension for your browser,
  - Copy&paste the script to your scripts library.
- - Go to Solutions tab of your Codewars profile to let
-   the script fetch/update information about your solutions.
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
@@ -31,6 +29,7 @@ WHERE CAN I DOWNLOAD IT FROM?
    automatically scrolled to show your score.
  - Leaderboards: Rank leaderboards utilizing Codewars API, to show users
    ranked by overall rank or a language rank.
+ - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -66,4 +65,4 @@ WHERE CAN I DOWNLOAD IT FROM?
  - StackOverflow
  - jQuery
  - notify.js
- 
+ - Chart.js
