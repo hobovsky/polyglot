@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.20
+// @version 1.13.20.1
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -365,8 +365,10 @@ function buildLanguagesLeaderboardTab() {
 
 function addRankAssessmentBreakdown(breakdown, elem) {
 
-    let canvas = '<tr style="display:none" id="glotBreakdownRow"><td colspan=2><canvas id="glotChartBreakdown"/></td></tr>';
-    jQuery(elem).parent().after(canvas);
+    if(!jQuery('#glotBreakdownRow').length) {
+        let canvas = '<tr style="display:none" id="glotBreakdownRow"><td colspan=2><canvas id="glotChartBreakdown"/></td></tr>';
+        jQuery(elem).parent().after(canvas);
+    }
 
     let allRanks = {};
     for(let b of breakdown) {
@@ -434,8 +436,11 @@ function addRankAssessmentsUi(elem) {
     let allCells = jQuery(elem).find('td');
 
     let leftCell = jQuery(allCells[8]);
-    leftCell.append(' <a id="glotToggleBreakdown">(see breakdown)</a>');
-    jQuery('#glotToggleBreakdown').click(toggleRankAssessmentsBreakdown);
+
+    if(!jQuery('#glotToggleBreakdown').length) {
+        leftCell.append(' <a id="glotToggleBreakdown">(see breakdown)</a>');
+        jQuery('#glotToggleBreakdown').click(toggleRankAssessmentsBreakdown);
+    }
 
     let kataId = getViewedKataId();
     fetchRankAssessmentBreakdown(kataId, leftCell);
@@ -572,7 +577,7 @@ const leaderboardScrollView=function(){
 
 const processRankAssessments=function(){
     let elem = jQuery(this);
-    if(elem.text() !== 'Stats:' || !isBetaKata()) {
+    if(elem.text() !== 'Stats:') {
         return;
     }
     addRankAssessmentsUi(elem);
