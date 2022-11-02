@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.20.1
+// @version 1.13.21
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -446,6 +446,30 @@ function addRankAssessmentsUi(elem) {
     fetchRankAssessmentBreakdown(kataId, leftCell);
 }
 
+/********************************
+ *  order user rank breakdown   *
+ ********************************/
+
+function orderRankBreakdown(elem) {
+    let table = jQuery(elem);
+    let langs = table.children().sort(sortByRank);
+    langs.each(function(){
+        table.append(this);
+    });
+}
+
+function sortByRank(e1, e2) {
+    let r1 = getRank(e1);
+    let r2 = getRank(e2);
+    return r2[1] - r1[1] || r2[2] - r1[2] || r1[0].localeCompare(r2[0]);
+}
+
+function getRank(e) {
+    let parts = e.textContent.split(/:| \/ /);
+    let rank = parts[1][0] * (parts[1][2] == 'k' ? -1 : 1);
+    let percent = +parts[2].slice(0, -1);
+    return [parts[0], rank, percent];
+}
 
 /********************************
  *           Settings           *
@@ -458,7 +482,8 @@ const checkBoxes = [
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
     {name: 'showRankLeaderboards',           label: 'Show "Rank" leaderboards'},
     {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
-    {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'}
+    {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
+    {name: 'orderRankBreakdown',             label: 'Order user rank breakdown'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -586,15 +611,16 @@ const processRankAssessments=function(){
 const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
-    [tabidizeByLanguage,      "div.list-item-solutions",              {existing, onceOnly}, ['showSolutionsTabs']],
-    [tabidizePastSolutions,   'li[data-tab="solutions"]',             {existing, onceOnly}, ['showPastSolutionsTabs']],
-    [spoilerFlagOpacityChange,'li.is-auto-hidden',                    {existing},           ['alwaysShowSpoilerFlag']],
-    [addCopyButton,           'code',                                 {existing},           ['showCopyToClipboardButtons']],
-    [leaderboardRedirection,  'a[title="Leaders"]',                   {existing},           ['preferCompletedKataLeaderboard']],
-    [languageLeaderboards,    'h1.page-title',                        {existing},           ['showRankLeaderboards']],
-    [leaderboardScrollView,   'tr.is-current-player',                 {existing},           ['scrollLeaderboard']],
-    [processRankAssessments,  'h3',                                   {existing},           ['showRankAssessments']],
-    [buildPolyglotConfigMenu, 'a.js-sign-out',                        {existing},           []],
+    [tabidizeByLanguage,      "div.list-item-solutions",                  {existing, onceOnly}, ['showSolutionsTabs']],
+    [tabidizePastSolutions,   'li[data-tab="solutions"]',                 {existing, onceOnly}, ['showPastSolutionsTabs']],
+    [spoilerFlagOpacityChange,'li.is-auto-hidden',                        {existing},           ['alwaysShowSpoilerFlag']],
+    [addCopyButton,           'code',                                     {existing},           ['showCopyToClipboardButtons']],
+    [leaderboardRedirection,  'a[title="Leaders"]',                       {existing},           ['preferCompletedKataLeaderboard']],
+    [languageLeaderboards,    'h1.page-title',                            {existing},           ['showRankLeaderboards']],
+    [leaderboardScrollView,   'tr.is-current-player',                     {existing},           ['scrollLeaderboard']],
+    [processRankAssessments,  'h3',                                       {existing},           ['showRankAssessments']],
+    [orderRankBreakdown,      'div[data-tippy-content^="Skill Ranking"]', {existing, onceOnly}, ['orderRankBreakdown']],
+    [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 
 
