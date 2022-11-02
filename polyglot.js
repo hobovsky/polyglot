@@ -410,9 +410,13 @@ function rankAssessmentsBreakdownDownloaded(resp) {
     addRankAssessmentBreakdown(breakdownEntries, elem);
 }
 
+function getRankAssesmentsUrl(kataId) {
+    return `/api/v1/code-challenges/${kataId}/assessed-ranks`;
+}
+
 function fetchRankAssessmentBreakdown(kataId, elem) {
 
-    let url = `/api/v1/code-challenges/${kataId}/assessed-ranks`;
+    let url = getRankAssesmentsUrl(kataId);
     let opts = {
         method: "GET",
         url: url,
@@ -437,14 +441,15 @@ function addRankAssessmentsUi(elem) {
 
     let leftCell = jQuery(allCells[8]);
 
+    let kataId = getViewedKataId();
     if(!jQuery('#glotToggleBreakdown').length) {
-        leftCell.append(' <a id="glotToggleBreakdown">(see breakdown)</a>');
+        leftCell.append(` <a id="glotToggleBreakdown">(see breakdown)</a> <a id="glotBreakdownLink" href="${getRankAssesmentsUrl(kataId)}">(link)</a>`);
         jQuery('#glotToggleBreakdown').click(toggleRankAssessmentsBreakdown);
     }
 
-    let kataId = getViewedKataId();
     fetchRankAssessmentBreakdown(kataId, leftCell);
 }
+
 
 /********************************
  *  order user rank breakdown   *
