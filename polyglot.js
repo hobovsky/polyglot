@@ -613,6 +613,64 @@ const processRankAssessments=function(){
     addRankAssessmentsUi(elem);
 }
 
+const scanSolvedLanguages=function() {
+    console.info("scan solved languages");
+    const kataId = getViewedKataId();
+    let elem = jQuery(this);
+    let commentContainer = elem.closest('li.comment');
+
+    let allCommentsData = jQuery('div.comments-list-component').data('view-data');
+    console.info("all comments data", allCommentsData);
+    let userMap = {};
+    for(let comment of allCommentsData.comments) userMap[comment.id] = comment.user_id;
+
+    let commentId = commentContainer.attr('id');
+
+    let userId = userMap[commentId];
+
+     console.info('commentId', commentId, 'userId', userId, 'userMap', userMap);
+	// console.info('userLink', userLink, 'userName', userName, 'userId', userId, 'userMap', userMap);
+
+    let allKataLangs = jQuery('div#language_dd dd').toArray().map(dd => jQuery(dd).data('value')).filter(Boolean).sort();
+    console.info("all langs", allKataLangs);
+
+    for(let lang of allKataLangs) {
+        let url = `https://www.codewars.com/kata/${kataId}/${lang}/solution/${userId}`;
+        console.info(`URL: ${url}`);
+
+        function solutionDownloaded(resp) {
+            if (resp.readyState !== 4) return;
+            let cwResp = resp.response;
+            if(cwResp.completed || cwResp.solution) {
+                console.info(`CW response:`, resp.context, cwResp);
+                let userlink = elem.parents('li.comment').find('h6').first();
+                userlink.append(' | ' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)));
+            }
+        }
+
+        let opts = {
+            fetch: true,
+            method: "POST",
+            url: url,
+            onreadystatechange: solutionDownloaded,
+            onabort: fetchAborted,
+            onerror: fetchError,
+            context: {
+                userId: userId,
+                kataId: kataId,
+                lang:   lang
+            },
+            responseType: "json",
+            cookie: '_session_id=...',
+            headers: {
+                'User-Agent': 'Polyglot User Script',
+                'x-csrf-token': '...'
+            }
+        };
+        GM_xmlhttpRequest(opts);
+    };
+}
+
 const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
@@ -625,6 +683,7 @@ const LISTENERS_CONFIG = [
     [leaderboardScrollView,   'tr.is-current-player',                     {existing},           ['scrollLeaderboard']],
     [processRankAssessments,  'h3',                                       {existing},           ['showRankAssessments']],
     [orderRankBreakdown,      'div[data-tippy-content^="Skill Ranking"]', {existing, onceOnly}, ['orderRankBreakdown']],
+    [scanSolvedLanguages,     'div.my-4',                                 {existing},           ['scanSolvedLanguages']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 
