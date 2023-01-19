@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.13.21
+// @version 1.13.22
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -45,8 +45,6 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - Leaderboards: Rank leaderboards utilizing Codewars API, to show users
-   ranked by overall rank or a language rank.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
 
  HOW TO UNINSTALL IT?
@@ -255,109 +253,6 @@ function tabidizePastSolutions(liElem) {
     let tabsPanel = langTabs.tabs();
 }
 
-/********************************
- *       Rank Leaderboards       *
- *********************************/
-function makeRankBadge(rank) {
-    return `<div class="small-hex is-extra-wide is-${getRankColor(rank)}-rank float-left mt-5px mr-5"><div class="inner-small-hex is-extra-wide "><span>${getRankLabel(rank)}</span></div></div>`
-}
-
-function getCurrentPlayerClass(leaderboardEntry) {
-    return leaderboardEntry.username == getUserName() ? 'class="is-current-player"' : ""
-}
-
-function createLeaderboardRow(boardEntry) {
-
-    let row = `<tr data-username="${boardEntry.username}" ${getCurrentPlayerClass(boardEntry)}><td class="rank is-small">#${boardEntry.position}</td><td class="is-big">${makeRankBadge(boardEntry.rank)} <a href="/users/${boardEntry.id}">${boardEntry.username}</a></td><td></td><td>${boardEntry.score}</td></tr>`
-    return row;
-}
-
-function fillLeaderboardRows(collected) {
-    const leaderboardRows = jQuery('tr[data-username]');
-    leaderboardRows.remove();
-
-    var rowsHtml = collected.sort((r1, r2)=>r2.score-r1.score).map(createLeaderboardRow).join('');
-    jQuery('div.leaderboard table tbody').append(rowsHtml);
-}
-
-function leaderboardDownloaded(resp) {
-    if (resp.readyState !== 4) return;
-    let cwResp = resp.response;
-    const leaderboardEntries = cwResp.data;
-    const {lang, collected, page} = resp.context;
-    collected.push(...leaderboardEntries);
-
-    if(page < 10 && leaderboardEntries && leaderboardEntries.length) {
-        buildLeaderboard(lang, collected, page+1);
-    } else {
-        fillLeaderboardRows(collected);
-    }
-}
-
-function buildLeaderboard(lang, collected, page=1) {
-
-    let url = `/api/v1/leaders/ranks/${lang}?page=${page}`;
-
-    let opts = {
-        method: "GET",
-        url: url,
-        onreadystatechange: leaderboardDownloaded,
-        onabort: fetchAborted,
-        onerror: fetchError,
-        context: {lang: lang, collected: collected, page: page},
-        responseType: "json"
-    };
-    GM_xmlhttpRequest(opts);
-    jQuery.notify(`Fetching leaderboard page ${page}...`, "info");
-}
-
-function languageChanged() {
-    const selectedLanguage = jQuery('#glotLanguagesDropdown').val();
-    buildLeaderboard(selectedLanguage, [], 1);
-}
-
-function buildLanguagesDropdown() {
-
-    let url = "/api/v1/languages";
-
-    function makeLangItems(langItems) {
-        return langItems.map(({id, name}) => `<option value='${id}'>${name}</option>`)
-    }
-
-    function languagesDownloaded(resp) {
-        if (resp.readyState !== 4) return;
-        jQuery('div.leaderboard').prepend(`<select id="glotLanguagesDropdown" class="${DROPDOWN_STYLE_CLASS}"><option value="overall">Overall</option>${makeLangItems(resp.response.data).join('')}</select>`);
-        jQuery('div.leaderboard').prepend('<p id="glotDisclaimer">Note from Polyglot script: The feature of rank leaderboards is still work in progress. Expect it to be buggy or incomplete.</p>')
-        jQuery('#glotLanguagesDropdown').change(languageChanged);
-    }
-
-    let opts = {
-        method: "GET",
-        url: url,
-        onreadystatechange: languagesDownloaded,
-        onabort: fetchAborted,
-        onerror: fetchError,
-        responseType: "json"
-    };
-    GM_xmlhttpRequest(opts);
-}
-
-function buildLanguagesLeaderboardTab() {
-    jQuery('dl.tabs').append('<dd id="glotLanguagesLeaderboardTab"><a id="glotRankLeaderboardLink">Rank</a></dd>');
-    jQuery('#glotRankLeaderboardLink').click(function() {
-        if(jQuery('#glotLanguagesDropdown').length) return;
-        jQuery('dd.is-active').removeClass('is-active');
-        jQuery('#glotLanguagesLeaderboardTab').addClass('is-active');
-
-        let tbody = jQuery('div.leaderboard table tbody');
-        let tr = tbody.children('tr')[0];
-        let th = tr.children[3];
-        jQuery(th).text('Rank');
-
-        buildLanguagesDropdown();
-        buildLeaderboard('overall', [], 1);
-    });
-}
 
 /********************************
  *       Rank assessments       *
@@ -452,31 +347,6 @@ function addRankAssessmentsUi(elem) {
 
 
 /********************************
- *  order user rank breakdown   *
- ********************************/
-
-function orderRankBreakdown(elem) {
-    let table = jQuery(elem);
-    let langs = table.children().sort(sortByRank);
-    langs.each(function(){
-        table.append(this);
-    });
-}
-
-function sortByRank(e1, e2) {
-    let r1 = getRank(e1);
-    let r2 = getRank(e2);
-    return r2[1] - r1[1] || r2[2] - r1[2] || r1[0].localeCompare(r2[0]);
-}
-
-function getRank(e) {
-    let parts = e.textContent.split(/:| \/ /);
-    let rank = parts[1][0] * (parts[1][2] == 'k' ? -1 : 1);
-    let percent = +parts[2].slice(0, -1);
-    return [parts[0], rank, percent];
-}
-
-/********************************
  *           Settings           *
  *********************************/
 const checkBoxes = [
@@ -485,10 +355,8 @@ const checkBoxes = [
     {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
     {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
-    {name: 'showRankLeaderboards',           label: 'Show "Rank" leaderboards'},
     {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
     {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
-    {name: 'orderRankBreakdown',             label: 'Order user rank breakdown'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -593,12 +461,6 @@ const leaderboardRedirection=function(){
     elem.attr("href", "/users/leaderboard/kata");
 }
 
-const languageLeaderboards=function(){
-    if(jQuery(this).text() == 'Leaderboards') {
-        buildLanguagesLeaderboardTab();
-    }
-}
-
 const leaderboardScrollView=function(){
     if (!isElementInViewport(this)) {
         this.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -679,11 +541,8 @@ const LISTENERS_CONFIG = [
     [spoilerFlagOpacityChange,'li.is-auto-hidden',                        {existing},           ['alwaysShowSpoilerFlag']],
     [addCopyButton,           'code',                                     {existing},           ['showCopyToClipboardButtons']],
     [leaderboardRedirection,  'a[title="Leaders"]',                       {existing},           ['preferCompletedKataLeaderboard']],
-    [languageLeaderboards,    'h1.page-title',                            {existing},           ['showRankLeaderboards']],
     [leaderboardScrollView,   'tr.is-current-player',                     {existing},           ['scrollLeaderboard']],
     [processRankAssessments,  'h3',                                       {existing},           ['showRankAssessments']],
-    [orderRankBreakdown,      'div[data-tippy-content^="Skill Ranking"]', {existing, onceOnly}, ['orderRankBreakdown']],
-    [scanSolvedLanguages,     'div.my-4',                                 {existing},           ['scanSolvedLanguages']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 

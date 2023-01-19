@@ -27,8 +27,6 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
- - Leaderboards: Rank leaderboards utilizing Codewars API, to show users
-   ranked by overall rank or a language rank.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
 
  HOW TO UNINSTALL IT?
