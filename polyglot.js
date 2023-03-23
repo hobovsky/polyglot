@@ -357,6 +357,7 @@ const checkBoxes = [
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
     {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
     {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
+    {name: 'scanSolvedLanguages',           label: 'Scan solved languages'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -475,62 +476,76 @@ const processRankAssessments=function(){
     addRankAssessmentsUi(elem);
 }
 
-const scanSolvedLanguages=function() {
+const scanSolvedLanguages=function(commentActionsElem) {
     console.info("scan solved languages");
-    const kataId = getViewedKataId();
-    let elem = jQuery(this);
-    let commentContainer = elem.closest('li.comment');
 
+    let csrfToken = GM_getValue("glot.user.csrf_token", null);
+    let sessionId = GM_getValue("glot.user.session_id", null);
+
+    if(!csrfToken || !sessionId) {
+        console.info("CSRF token or session ID cookie are not set. Solved languages will not be fetched.");
+        return;
+    }
+
+    const kataId = getViewedKataId();
+    let allKataLangs = jQuery('div#language_dd dd').toArray().map(dd => jQuery(dd).data('value')).filter(Boolean).sort();
+    console.info("all langs", allKataLangs);
     let allCommentsData = jQuery('div.comments-list-component').data('view-data');
     console.info("all comments data", allCommentsData);
     let userMap = {};
     for(let comment of allCommentsData.comments) userMap[comment.id] = comment.user_id;
 
-    let commentId = commentContainer.attr('id');
+    function doScanLanguages(e) {
+    
+        let elem = e.data.link;
+        let commentContainer = elem.closest('li.comment');
+        let commentId = commentContainer.attr('id');
+        let userId = userMap[commentId];
 
-    let userId = userMap[commentId];
+        console.info('commentId', commentId, 'userId', userId, 'userMap', userMap);
+        // console.info('userLink', userLink, 'userName', userName, 'userId', userId, 'userMap', userMap);
 
-     console.info('commentId', commentId, 'userId', userId, 'userMap', userMap);
-	// console.info('userLink', userLink, 'userName', userName, 'userId', userId, 'userMap', userMap);
+        for(let lang of allKataLangs) {
+            let url = `https://www.codewars.com/kata/${kataId}/${lang}/solution/${userId}`;
+            console.info(`URL: ${url}`);
 
-    let allKataLangs = jQuery('div#language_dd dd').toArray().map(dd => jQuery(dd).data('value')).filter(Boolean).sort();
-    console.info("all langs", allKataLangs);
-
-    for(let lang of allKataLangs) {
-        let url = `https://www.codewars.com/kata/${kataId}/${lang}/solution/${userId}`;
-        console.info(`URL: ${url}`);
-
-        function solutionDownloaded(resp) {
-            if (resp.readyState !== 4) return;
-            let cwResp = resp.response;
-            if(cwResp.completed || cwResp.solution) {
-                console.info(`CW response:`, resp.context, cwResp);
-                let userlink = elem.parents('li.comment').find('h6').first();
-                userlink.append(' | ' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)));
+            function solutionDownloaded(resp) {
+                if (resp.readyState !== 4) return;
+                let cwResp = resp.response;
+                if(cwResp.completed || cwResp.solution) {
+                    console.info(`CW response:`, resp.context, cwResp);
+                    let userlink = elem.parents('li.comment').find('h6').first();
+                    userlink.append(' | ' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)));
+                }
             }
-        }
 
-        let opts = {
-            fetch: true,
-            method: "POST",
-            url: url,
-            onreadystatechange: solutionDownloaded,
-            onabort: fetchAborted,
-            onerror: fetchError,
-            context: {
-                userId: userId,
-                kataId: kataId,
-                lang:   lang
-            },
-            responseType: "json",
-            cookie: '_session_id=...',
-            headers: {
-                'User-Agent': 'Polyglot User Script',
-                'x-csrf-token': '...'
-            }
+            let opts = {
+                fetch: true,
+                method: "POST",
+                url: url,
+                onreadystatechange: solutionDownloaded,
+                onabort: fetchAborted,
+                onerror: fetchError,
+                context: {
+                    userId: userId,
+                    kataId: kataId,
+                    lang:   lang
+                },
+                responseType: "json",
+                cookie: `_session_id=${sessionId}`,
+                headers: {
+                    'User-Agent': 'Polyglot User Script',
+                    'x-csrf-token': csrfToken
+                }
+            };
+            GM_xmlhttpRequest(opts);
         };
-        GM_xmlhttpRequest(opts);
     };
+
+    let elem = jQuery(commentActionsElem);
+    elem.append(`<li><span class="bullet"/><a class="glotTrainedLanguages">Languages</a></li>`);
+    let link = elem.find("a.glotTrainedLanguages").first();
+    link.on("click", { link }, doScanLanguages);
 }
 
 const existing=true, onceOnly=false;
@@ -543,6 +558,7 @@ const LISTENERS_CONFIG = [
     [leaderboardRedirection,  'a[title="Leaders"]',                       {existing},           ['preferCompletedKataLeaderboard']],
     [leaderboardScrollView,   'tr.is-current-player',                     {existing},           ['scrollLeaderboard']],
     [processRankAssessments,  'h3',                                       {existing},           ['showRankAssessments']],
+    [scanSolvedLanguages,     'ul.comment-actions',                       {existing},           ['scanSolvedLanguages']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 
