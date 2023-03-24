@@ -16,6 +16,7 @@
 // @require https://greasyfork.org/scripts/21927-arrive-js/code/arrivejs.js?version=198809
 // @require https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
 // @require     https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
+// @require     https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
 
 /****************************************************************
@@ -357,7 +358,7 @@ const checkBoxes = [
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
     {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
     {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
-    {name: 'scanSolvedLanguages',           label: 'Scan solved languages'},
+    {name: 'scanSolvedLanguages',            label: 'Scan attempted languages'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -476,44 +477,57 @@ const processRankAssessments=function(){
     addRankAssessmentsUi(elem);
 }
 
+
+// The arrive listener is associated with a selector of each post, and as a result
+// the logic related to processing the comments container needs to be guided by some globals
+// to avoid repeating it for every post.
+let recentKataId;
+let allKataLangs;
+let userMap = {};
+
+let csrfToken = jQuery.cookie("CSRF-TOKEN"); // GM_getValue("glot.user.csrf_token", null);
+// Session cookie is HTTP-only and cannot be read with JS. The only way to use it in this function
+// is to have it stored under the "glot.user.session_id" key of the script storage.
+let sessionId = jQuery.cookie("_session_id") || GM_getValue("glot.user.session_id", null);
+
 const scanSolvedLanguages=function(commentActionsElem) {
-    console.info("scan solved languages");
-
-    let csrfToken = GM_getValue("glot.user.csrf_token", null);
-    let sessionId = GM_getValue("glot.user.session_id", null);
-
-    if(!csrfToken || !sessionId) {
-        console.info("CSRF token or session ID cookie are not set. Solved languages will not be fetched.");
-        return;
-    }
 
     const kataId = getViewedKataId();
-    let allKataLangs = jQuery('div#language_dd dd').toArray().map(dd => jQuery(dd).data('value')).filter(Boolean).sort();
-    console.info("all langs", allKataLangs);
-    let allCommentsData = jQuery('div.comments-list-component').data('view-data');
-    console.info("all comments data", allCommentsData);
-    let userMap = {};
-    for(let comment of allCommentsData.comments) userMap[comment.id] = comment.user_id;
+    if(kataId !== recentKataId) {
+
+        if(!csrfToken || !sessionId) {
+            console.info("CSRF token or session ID cookie are not set. Solved languages will not be fetched.");
+            return;
+        }
+
+        console.info("Scan attempted languages");
+        recentKataId = kataId;
+        allKataLangs = jQuery('div#language_dd dd').toArray().map(dd => jQuery(dd).data('value')).filter(Boolean).sort();
+        let allCommentsData = jQuery('div.comments-list-component').data('view-data');
+        userMap = {};
+        for(let comment of allCommentsData.comments) {
+            userMap[comment.id] = comment.user_id;
+            for(let nested of comment.comments) {
+                userMap[nested.id] = nested.user_id;
+            }
+        }
+    }
 
     function doScanLanguages(e) {
 
         let elem = e.data.link;
+        elem.parent().nextAll('li').remove();
         let commentContainer = elem.closest('li.comment');
         let commentId = commentContainer.attr('id');
         let userId = userMap[commentId];
 
-        console.info('commentId', commentId, 'userId', userId, 'userMap', userMap);
-        // console.info('userLink', userLink, 'userName', userName, 'userId', userId, 'userMap', userMap);
-
         for(let lang of allKataLangs) {
             let url = `https://www.codewars.com/kata/${kataId}/${lang}/solution/${userId}`;
-            console.info(`URL: ${url}`);
 
             function solutionDownloaded(resp) {
                 if (resp.readyState !== 4) return;
                 let cwResp = resp.response;
                 if(cwResp.completed || cwResp.solution) {
-                    console.info(`CW response:`, resp.context, cwResp);
                     let userlink = elem.parents('ul').first();
                     userlink.append('<li><span class="bullet"/>' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)) + "</li>");
                 }
@@ -543,7 +557,7 @@ const scanSolvedLanguages=function(commentActionsElem) {
     };
 
     let elem = jQuery(commentActionsElem);
-    elem.append(`<li><span class="bullet"/><a class="glotTrainedLanguages">Languages</a></li>`);
+    elem.append(`<li><span class="bullet"/><a class="glotTrainedLanguages">Attempted languages</a></li>`);
     let link = elem.find("a.glotTrainedLanguages").first();
     link.on("click", { link }, doScanLanguages);
 }
