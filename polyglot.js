@@ -496,7 +496,7 @@ const scanSolvedLanguages=function(commentActionsElem) {
     for(let comment of allCommentsData.comments) userMap[comment.id] = comment.user_id;
 
     function doScanLanguages(e) {
-    
+
         let elem = e.data.link;
         let commentContainer = elem.closest('li.comment');
         let commentId = commentContainer.attr('id');
@@ -514,8 +514,8 @@ const scanSolvedLanguages=function(commentActionsElem) {
                 let cwResp = resp.response;
                 if(cwResp.completed || cwResp.solution) {
                     console.info(`CW response:`, resp.context, cwResp);
-                    let userlink = elem.parents('li.comment').find('h6').first();
-                    userlink.append(' | ' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)));
+                    let userlink = elem.parents('ul').first();
+                    userlink.append('<li><span class="bullet"/>' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)) + "</li>");
                 }
             }
 
