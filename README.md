@@ -28,6 +28,7 @@ WHERE CAN I DOWNLOAD IT FROM?
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
+ - Presents languages a user attempted the kata with.
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -64,3 +65,4 @@ WHERE CAN I DOWNLOAD IT FROM?
  - jQuery
  - notify.js
  - Chart.js
+ 
