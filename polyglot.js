@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.14.1
+// @version 1.14.0
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -422,9 +422,9 @@ function buildConfigDialog() {
         To use the "Show Attempted Languages" feature, the script needs to know ID of your Codewars session.
         It is stored as a <code>_session_id</code> cookie and can be found with developer tools of your browser.
       </p>
-      
+
       <label for="cw_session_id">Codewars session ID:</label>
-      <input id="cw_session_id" type="password"/>
+      <input id="cw_session_id" type="password" size="33"/>
       <hr style="margin: 10px"/>
       <p><b>Note:</b> some settings are applied after refresh.</p>
     </div>`);
@@ -442,7 +442,7 @@ function buildConfigDialog() {
               text: "OK",
               click: function() {
                 GM_setValue("glot.user.session_id", jQuery("#cw_session_id").prop("value"));
-                jQuery(this).dialog("close"); 
+                jQuery(this).dialog("close");
               }
           }
       ]
