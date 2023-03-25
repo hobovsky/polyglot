@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.14.0
+// @version 1.14.1
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -358,7 +358,7 @@ const checkBoxes = [
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
     {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
     {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
-    {name: 'scanSolvedLanguages',            label: 'Scan attempted languages'},
+    {name: 'scanSolvedLanguages',            label: 'Show attempted languages'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -417,10 +417,20 @@ function buildConfigDialog() {
           </table>
         </fieldset>
       </form>
+      <hr style="margin: 10px"/>
+      <p>
+        To use the "Show Attempted Languages" feature, the script needs to know ID of your Codewars session.
+        It is stored as a <code>_session_id</code> cookie and can be found with developer tools of your browser.
+      </p>
+      
+      <label for="cw_session_id">Codewars session ID:</label>
+      <input id="cw_session_id" type="password"/>
+      <hr style="margin: 10px"/>
       <p><b>Note:</b> some settings are applied after refresh.</p>
     </div>`);
 
     attachBoxListeners(checkBoxes);
+    jQuery("#cw_session_id").prop("value", GM_getValue("glot.user.session_id", ""));
 
     return jQuery('#glotSettingsDialog').dialog({
       autoOpen: false,
@@ -430,7 +440,10 @@ function buildConfigDialog() {
       buttons: [
           {
               text: "OK",
-              click: function() { jQuery(this).dialog("close"); }
+              click: function() {
+                GM_setValue("glot.user.session_id", jQuery("#cw_session_id").prop("value"));
+                jQuery(this).dialog("close"); 
+              }
           }
       ]
     });
