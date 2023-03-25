@@ -69,22 +69,6 @@ WHERE CAN I DOWNLOAD IT FROM?
 
 ### How to use "Show attempted languages" feature?
 
-For technical reasons, a user script is not able to get data necessary for this feature without some additional setup. You need to provide a session ID which is used to identify a logged in user. The value can be read with developer tools from the `_session_id` cookie, and needs to be stored in the Tampermoneky's user script storage under the `"glot.user.session_id"` key. For example, the userscript storage can look like following:
-
-```text
-{
-    "glot.settings": {
-        "showSolutionsTabs": false,
-        "showastSolutionsTabs": false,
-        "showCopyToClipboardButtons": true,
-        "preferCompletedKataLeaderboard": true,
-        "scrollLeaderboard": true,
-        "alwaysShowSpoilerFlag": true,
-        "showRankAssessments": true,
-        "scanSolvedLanguages": true
-    },
-    "glot.user.session_id": "8bxxxxxxxxxxxxxxxxxxxxxxxxxxxx91"
-}
-```
+For technical reasons, a user script is not able to get data necessary for this feature without some additional setup. You need to provide a session ID which is used to identify a logged in user. The value can be read with developer tools from the `_session_id` cookie, and needs to be entered into the "Codewars session ID" input in Polyglot settings dialog.
 
 When the feature is enabled and properly set up, it's possible to view languages a user attempted the kata with, by clicking on "Attempted languages" link under discourse posts. If a language appears as stroke through, it means that a viewing user cannot see the solution becaue they didnt complete the kata in this language. If a language name is clickable, it means that a viewing user is eligible for viewing the solution and can use the link to change the current language to the clicked one, and use the "View solution" expandable panel to see the code of the most recent attempt.
