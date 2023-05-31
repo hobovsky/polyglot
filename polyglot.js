@@ -348,6 +348,45 @@ function addRankAssessmentsUi(elem) {
 
 
 /********************************
+ *      Solution timestamps     *
+ ********************************/
+
+function dateFromObjectId(objectId) {
+    return new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
+}
+
+function formatDate(date) {
+  let year = date.getFullYear();
+  let month = (date.getMonth()+101).toString().slice(-2);
+  let day = (date.getDate()+100).toString().slice(-2);
+  let hour = (date.getHours()+100).toString().slice(-2);
+  let min = (date.getMinutes()+100).toString().slice(-2);
+  let sec = (date.getSeconds()+100).toString().slice(-2);
+  return year+"-"+month+"-"+day+" "+hour+":"+min+":"+sec;
+}
+
+function solutionTimestamps(sol) {
+  let id = sol.attributes.id.textContent;
+  addTimeStamp(sol, id);
+}
+
+function reviewTimestamps(sol) {
+  let id = /groups\/([0-9a-f]{24})/i.exec(window.location.href)[1];
+  addTimeStamp(sol, id);
+}
+
+function addTimeStamp(sol, id){
+  let date = formatDate(dateFromObjectId(id));
+  let buttons = sol.getElementsByClassName("piped-text has-keyword-tags").item(0);
+  if(buttons.lastChild.textContent == date) return;
+  let dateElement = document.createElement("li");
+  dateElement.textContent = date;
+  dateElement.style = 'color: #c0c0c0; font-size: 9pt';
+  buttons.appendChild(dateElement);
+}
+
+
+/********************************
  *           Settings           *
  *********************************/
 const checkBoxes = [
@@ -359,6 +398,7 @@ const checkBoxes = [
     {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
     {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
     {name: 'scanSolvedLanguages',            label: 'Show attempted languages'},
+    {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -586,6 +626,8 @@ const LISTENERS_CONFIG = [
     [leaderboardScrollView,   'tr.is-current-player',                     {existing},           ['scrollLeaderboard']],
     [processRankAssessments,  'h3',                                       {existing},           ['showRankAssessments']],
     [scanSolvedLanguages,     'ul.comment-actions',                       {existing},           ['scanSolvedLanguages']],
+    [solutionTimestamps,      '.js-result-group',                         {existing},           ['solutionTimestamps']],
+    [reviewTimestamps,        '.js-solution-group',                       {existing},           ['solutionTimestamps']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 
