@@ -415,8 +415,6 @@ function glotSetOption(optionName) {
     GM_setValue(glotSettingsKey, settingsObj);
 }
 
-var dialog = undefined;
-
 function buildConfigDialog() {
     function makeBox({name, label}) {
         const cbId = `glotSetting_${name}`;
@@ -477,17 +475,13 @@ function buildConfigDialog() {
     });
 }
 
-
-function getPolyglotConfigDialog() {
-    if(!dialog) {
-        dialog = buildConfigDialog();
+function buildPolyglotConfigMenu(menuElement) {
+    let menu = jQuery(menuElement);
+    if(!menu.find("#glotSettingsLink").length) {
+        menu.append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
     }
-    return dialog;
-}
-
-function buildPolyglotConfigMenu(menu) {
-    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
-    jQuery('#glotSettingsLink').click(function() { getPolyglotConfigDialog().dialog('open'); });
+     // handler must be reattached every time
+    menu.find('#glotSettingsLink').click(function() { buildConfigDialog().dialog('open'); });
 }
 
 
