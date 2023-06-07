@@ -172,36 +172,26 @@ function fetchError() {
 const btnCaption = "Copy to clipboard";
 function copyToClipboardFunc(codeElem) {
     return function() {
-        let code = codeElem.text().substring(btnCaption.length);
+        let code = codeElem.text();
         GM_setClipboard(code, "text");
         jQuery.notify(code.length + " characters copied to clipboard.", "info");
     };
 }
 
-function addCopyButton(codeElem, attempt = 10) {
-    //TODO: syntax highlighter treats buttons added by me as regular code which should
-    //be highlighted, and destroys them if they are added before highlighting is completed.
-    //To avoid such situation, I wait 1 second to let highlighter complete its job,
-    //and add button after this time elapses. However, better solution might be just to listen
-    //for removal of the buton and simply re-add it?
-    setTimeout(function() {
-        codeElem = jQuery(codeElem);
+function addCopyButton(codeElem) {
+    codeElem = jQuery(codeElem);
 
-        if (codeElem.parents("#description").length) {
-            return;
-        }
+    if (codeElem.parents("#description").length) {
+        return;
+    }
 
-        if (codeElem.parent("pre").length && !codeElem.children("button.glotBtnCopy").length) {
-            if (codeElem.children("span").length) {
-                codeElem.prepend("<button class='glotBtnCopy' type='button'>" + btnCaption + "</button>");
-                let btn = codeElem.children("button").first();
-                btn.on("click", copyToClipboardFunc(codeElem));
-            } else if (attempt) {
-                console.info("Highlight delay...");
-                addCopyButton(codeElem, attempt - 1);
-            }
-        }
-    }, 1000);
+    let parent = codeElem.parent("pre");
+    if (parent.length && !parent.children("button.glotBtnCopy").length) {
+        parent.prepend("<button class='glotBtnCopy' type='button'>" + btnCaption + "</button>");
+    }
+    let btn = parent.children("button").first();
+    // handler must be reattached every time
+    btn.on("click", copyToClipboardFunc(codeElem));
 }
 
 /********************************
