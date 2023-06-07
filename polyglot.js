@@ -233,10 +233,8 @@ function tabidizeByLanguage(solutionPanel) {
     let tabsPanel = langTabs.tabs();
 }
 
-function tabidizePastSolutions(liElem) {
-    let solutionPanel = jQuery(liElem)
-        .children("div:first")
-        .first();
+function tabidizePastSolutions(divElem) {
+    let solutionPanel = jQuery(divElem).first();
 
     let langDivs = solutionPanel.children();
     langDivs.wrapAll('<div class="langTabs"/>');
@@ -619,7 +617,7 @@ const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
     [tabidizeByLanguage,      "div.list-item-solutions",                  {existing, onceOnly}, ['showSolutionsTabs']],
-    [tabidizePastSolutions,   'li[data-tab="solutions"]',                 {existing, onceOnly}, ['showPastSolutionsTabs']],
+    [tabidizePastSolutions,   'div.h-full.mb-4.p-4',                      {existing, onceOnly}, ['showPastSolutionsTabs']],
     [spoilerFlagOpacityChange,'li.is-auto-hidden',                        {existing},           ['alwaysShowSpoilerFlag']],
     [addCopyButton,           'code',                                     {existing},           ['showCopyToClipboardButtons']],
     [leaderboardRedirection,  'a[title="Leaders"]',                       {existing},           ['preferCompletedKataLeaderboard']],
