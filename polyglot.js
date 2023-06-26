@@ -172,36 +172,26 @@ function fetchError() {
 const btnCaption = "Copy to clipboard";
 function copyToClipboardFunc(codeElem) {
     return function() {
-        let code = codeElem.text().substring(btnCaption.length);
+        let code = codeElem.text();
         GM_setClipboard(code, "text");
         jQuery.notify(code.length + " characters copied to clipboard.", "info");
     };
 }
 
-function addCopyButton(codeElem, attempt = 10) {
-    //TODO: syntax highlighter treats buttons added by me as regular code which should
-    //be highlighted, and destroys them if they are added before highlighting is completed.
-    //To avoid such situation, I wait 1 second to let highlighter complete its job,
-    //and add button after this time elapses. However, better solution might be just to listen
-    //for removal of the buton and simply re-add it?
-    setTimeout(function() {
-        codeElem = jQuery(codeElem);
+function addCopyButton(codeElem) {
+    codeElem = jQuery(codeElem);
 
-        if (codeElem.parents("#description").length) {
-            return;
-        }
+    if (codeElem.parents("#description").length) {
+        return;
+    }
 
-        if (codeElem.parent("pre").length && !codeElem.children("button.glotBtnCopy").length) {
-            if (codeElem.children("span").length) {
-                codeElem.prepend("<button class='glotBtnCopy' type='button'>" + btnCaption + "</button>");
-                let btn = codeElem.children("button").first();
-                btn.on("click", copyToClipboardFunc(codeElem));
-            } else if (attempt) {
-                console.info("Highlight delay...");
-                addCopyButton(codeElem, attempt - 1);
-            }
-        }
-    }, 1000);
+    let parent = codeElem.parent("pre");
+    if (parent.length && !parent.children("button.glotBtnCopy").length) {
+        parent.prepend("<button class='glotBtnCopy' type='button'>" + btnCaption + "</button>");
+    }
+    let btn = parent.children("button").first();
+    // handler must be reattached every time
+    btn.on("click", copyToClipboardFunc(codeElem));
 }
 
 /********************************
@@ -233,10 +223,8 @@ function tabidizeByLanguage(solutionPanel) {
     let tabsPanel = langTabs.tabs();
 }
 
-function tabidizePastSolutions(liElem) {
-    let solutionPanel = jQuery(liElem)
-        .children("div:first")
-        .first();
+function tabidizePastSolutions(divElem) {
+    let solutionPanel = jQuery(divElem).first();
 
     let langDivs = solutionPanel.children();
     langDivs.wrapAll('<div class="langTabs"/>');
@@ -427,8 +415,6 @@ function glotSetOption(optionName) {
     GM_setValue(glotSettingsKey, settingsObj);
 }
 
-var dialog = undefined;
-
 function buildConfigDialog() {
     function makeBox({name, label}) {
         const cbId = `glotSetting_${name}`;
@@ -489,17 +475,13 @@ function buildConfigDialog() {
     });
 }
 
-
-function getPolyglotConfigDialog() {
-    if(!dialog) {
-        dialog = buildConfigDialog();
+function buildPolyglotConfigMenu(menuElement) {
+    let menu = jQuery(menuElement);
+    if(!menu.find("#glotSettingsLink").length) {
+        menu.append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
     }
-    return dialog;
-}
-
-function buildPolyglotConfigMenu(menu) {
-    jQuery(menu).append(`<li class="border-t"><a id="glotSettingsLink"><i class="icon-moon-file-text"/>Polyglot Settings</a></li>`);
-    jQuery('#glotSettingsLink').click(function() { getPolyglotConfigDialog().dialog('open'); });
+     // handler must be reattached every time
+    menu.find('#glotSettingsLink').click(function() { buildConfigDialog().dialog('open'); });
 }
 
 
@@ -619,7 +601,7 @@ const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
     [tabidizeByLanguage,      "div.list-item-solutions",                  {existing, onceOnly}, ['showSolutionsTabs']],
-    [tabidizePastSolutions,   'li[data-tab="solutions"]',                 {existing, onceOnly}, ['showPastSolutionsTabs']],
+    [tabidizePastSolutions,   'div.h-full.mb-4.p-4',                      {existing, onceOnly}, ['showPastSolutionsTabs']],
     [spoilerFlagOpacityChange,'li.is-auto-hidden',                        {existing},           ['alwaysShowSpoilerFlag']],
     [addCopyButton,           'code',                                     {existing},           ['showCopyToClipboardButtons']],
     [leaderboardRedirection,  'a[title="Leaders"]',                       {existing},           ['preferCompletedKataLeaderboard']],
