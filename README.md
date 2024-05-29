@@ -19,17 +19,18 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
+ - Makes rank score visible in UI.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
  - Contents of "Solutions" and "Past solutions" views are displayed in
    tabs by language.
- - Leaderboards: "Solved kata is default leaderboard (since "Overall"
+ - Leaderboards: "Solved kata" is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
  - Presents languages a user attempted the kata with (see below).
-
+ 
  HOW TO UNINSTALL IT?
 --------------------
  I haven't checked.

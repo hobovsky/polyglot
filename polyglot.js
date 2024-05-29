@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.14.2
+// @version 1.15.0
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -11,12 +11,12 @@
 // @grant   GM_addStyle
 // @grant   GM_setClipboard
 // @connect self
-// @require     http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
-// @require     http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
+// @require http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
+// @require http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
 // @require https://greasyfork.org/scripts/21927-arrive-js/code/arrivejs.js?version=198809
 // @require https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
-// @require     https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
-// @require     https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
 
 /****************************************************************
@@ -38,15 +38,17 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
+ - Makes rank score visible in UI.
  - You can copy content of code boxes into clipboard.
  - "Spoiler" flags are visible all the time and do not dis/re-appear
    in a very annoying manner.
  - Contents of "Solutions" and "Past solutions" views are displayed in
    tabs by language.
- - Leaderboards: "Solved kata is default leaderboard (since "Overall"
+ - Leaderboards: "Solved kata" is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
+ - Presents languages a user attempted the kata with.
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -116,6 +118,36 @@ function getUserName() {
     }
     return userName;
 }
+
+const allLangs = function() {
+    let allLangs = {};
+    [
+        {"id":"agda","name":"Agda"},{"id":"bf","name":"BF"},{"id":"c","name":"C"},
+        {"id":"cfml","name":"CFML"},{"id":"clojure","name":"Clojure"},{"id":"cobol","name":"COBOL"},
+        {"id":"coffeescript","name":"CoffeeScript"},{"id":"commonlisp","name":"CommonLisp"},{"id":"coq","name":"Coq"},
+        {"id":"cpp","name":"C++"},{"id":"crystal","name":"Crystal"},{"id":"csharp","name":"C#"},
+        {"id":"d","name":"D"},{"id":"dart","name":"Dart"},{"id":"elixir","name":"Elixir"},
+        {"id":"elm","name":"Elm"},{"id":"erlang","name":"Erlang"},{"id":"factor","name":"Factor"},
+        {"id":"forth","name":"Forth"},{"id":"fortran","name":"Fortran"},{"id":"fsharp","name":"F#"},
+        {"id":"go","name":"Go"},{"id":"groovy","name":"Groovy"},{"id":"haskell","name":"Haskell"},
+        {"id":"haxe","name":"Haxe"},{"id":"idris","name":"Idris"},{"id":"java","name":"Java"},
+        {"id":"javascript","name":"JavaScript"},{"id":"julia","name":"Julia"},{"id":"kotlin","name":"Kotlin"},
+        {"id":"lambdacalc","name":"λ Calculus"},{"id":"lean","name":"Lean"},{"id":"lua","name":"Lua"},
+        {"id":"nasm","name":"NASM"},{"id":"nim","name":"Nim"},{"id":"objc","name":"Objective-C"},
+        {"id":"ocaml","name":"OCaml"},{"id":"pascal","name":"Pascal"},{"id":"perl","name":"Perl"},
+        {"id":"php","name":"PHP"},{"id":"powershell","name":"PowerShell"},{"id":"prolog","name":"Prolog"},
+        {"id":"purescript","name":"PureScript"},{"id":"python","name":"Python"},{"id":"r","name":"R"},
+        {"id":"racket","name":"Racket"},{"id":"raku","name":"Raku"},{"id":"reason","name":"Reason"},
+        {"id":"riscv","name":"RISC-V"},{"id":"ruby","name":"Ruby"},{"id":"rust","name":"Rust"},
+        {"id":"scala","name":"Scala"},{"id":"shell","name":"Shell"},{"id":"solidity","name":"Solidity"},
+        {"id":"sql","name":"SQL"},{"id":"swift","name":"Swift"},{"id":"typescript","name":"TypeScript"},
+        {"id":"vb","name":"VB"}, {"id": "overall", "name":"Overall"}
+    ].forEach(({id, name}) => {
+        allLangs[name] = id;
+        allLangs[id] = name;
+    });
+    return allLangs;
+}();
 
 let css = `
 .glotBtnCopy {
@@ -373,20 +405,87 @@ function addTimeStamp(sol, id){
   buttons.appendChild(dateElement);
 }
 
+/******************************
+ *         Rank scores        *
+******************************/
+const glotRankScoresKey = "glot.rankscores";
+
+function showTotalRankScore(elem) {
+    const scores = GM_getValue(glotRankScoresKey);
+    const overallScore = scores?.overall;
+    if(!overallScore) return;
+
+    const scoreElem = elem.children[1];
+    scoreElem.textContent = `Honor: ${scoreElem.textContent} / Rank: ${overallScore}`;
+}
+
+function showLanguageRankScores(elem) {
+    let langElems = jQuery(elem).find("div.honor");
+    let texts = [];
+    langElems.each((_, langElem) => {
+        let langText = langElem.textContent;
+        texts.push(langText);
+    });
+    const scores = GM_getValue(glotRankScoresKey, {});
+    jQuery(langElems).empty();
+    langElems.each((_, langElem) => {
+        let langText = texts.shift();
+        let [langname, ranktext] = langText.split(':');
+        let [rankname, progress] = ranktext.split(' / ');
+        let langid = allLangs[langname];
+        let rankscore =  scores[langid] ?? -1;
+        langhtml = `<b class=""mr-5px>${langname}:</b> ${rankname} (score: ${rankscore}) / ${progress}`;
+        jQuery(langElem).html(langhtml);
+    });
+}
+
+function getUserStatsUrl() {
+    return `https://www.codewars.com/api/v1/users/${App.instance.currentUser.id}`;
+}
+
+function userStatsDownloaded(resp) {
+    if (resp.readyState !== 4) return;
+    let cwResp = resp.response;
+    let apiranks = cwResp.ranks;
+    let glotranks = {}
+    glotranks.overall = apiranks.overall.score;
+    for(let [lang, rank] of Object.entries(apiranks.languages)) {
+        glotranks[lang] = rank.score;
+    }
+    GM_setValue(glotRankScoresKey, glotranks);
+} 
+
+function fetchRankScores(elem) {
+    jQuery(elem).on("click", function(){
+        let url = getUserStatsUrl();
+        let opts = {
+            method: "GET",
+            url: url,
+            onreadystatechange: userStatsDownloaded,
+            onabort: fetchAborted,
+            onerror: fetchError,
+            context: { },
+            responseType: "json"
+        };
+        GM_xmlhttpRequest(opts);
+    });
+}
 
 /********************************
  *           Settings           *
  *********************************/
 const checkBoxes = [
-    {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
-    {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
-    {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
-    {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
+    {name: 'showLanguageRankScores',         label: 'Show language rank scores'                     },
+    {name: 'showTotalRankScore',             label: 'Show rank score together with honor points'    },
+    {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'        },
+    {name: 'showPastSolutionsTabs',          label: 'Show previous solutions in the trainer in tabs'},
+    {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'               },
+    {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'           },
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
-    {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'},
-    {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
-    {name: 'scanSolvedLanguages',            label: 'Show attempted languages'},
-    {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'},
+    {name: 'alwaysShowSpoilerFlag',          label: 'Always show "Spoiler" flag'                    },
+    {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'               },
+    {name: 'scanSolvedLanguages',            label: 'Show attempted languages'                      },
+    {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'            },
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -600,17 +699,20 @@ const scanSolvedLanguages=function(commentActionsElem) {
 const existing=true, onceOnly=false;
 
 const LISTENERS_CONFIG = [
-    [tabidizeByLanguage,      "div.list-item-solutions",                  {existing, onceOnly}, ['showSolutionsTabs']],
-    [tabidizePastSolutions,   'div.h-full.mb-4.p-4',                      {existing, onceOnly}, ['showPastSolutionsTabs']],
-    [spoilerFlagOpacityChange,'li.is-auto-hidden',                        {existing},           ['alwaysShowSpoilerFlag']],
-    [addCopyButton,           'code',                                     {existing},           ['showCopyToClipboardButtons']],
-    [leaderboardRedirection,  'a[title="Leaders"]',                       {existing},           ['preferCompletedKataLeaderboard']],
-    [leaderboardScrollView,   'tr.is-current-player',                     {existing},           ['scrollLeaderboard']],
-    [processRankAssessments,  'h3',                                       {existing},           ['showRankAssessments']],
-    [scanSolvedLanguages,     'ul.comment-actions',                       {existing},           ['scanSolvedLanguages']],
-    [solutionTimestamps,      '.js-result-group',                         {existing},           ['solutionTimestamps']],
-    [reviewTimestamps,        '.js-solution-group',                       {existing},           ['solutionTimestamps']],
-    [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
+    [showLanguageRankScores,  "#report",                 {existing, onceOnly}, ['showLanguageRankScores']],
+    [showTotalRankScore,      'div.profile-points',      {existing, onceOnly}, ['showTotalRankScore']],
+    [fetchRankScores,         "#submit_btn",             {existing, onceOnly}, ['showLanguageRankScores', 'showTotalRankScore']],
+    [tabidizeByLanguage,      "div.list-item-solutions", {existing, onceOnly}, ['showSolutionsTabs']],
+    [tabidizePastSolutions,   'div.h-full.mb-4.p-4',     {existing, onceOnly}, ['showPastSolutionsTabs']],
+    [spoilerFlagOpacityChange,'li.is-auto-hidden',       {existing},           ['alwaysShowSpoilerFlag']],
+    [addCopyButton,           'code',                    {existing},           ['showCopyToClipboardButtons']],
+    [leaderboardRedirection,  'a[title="Leaders"]',      {existing},           ['preferCompletedKataLeaderboard']],
+    [leaderboardScrollView,   'tr.is-current-player',    {existing},           ['scrollLeaderboard']],
+    [processRankAssessments,  'h3',                      {existing},           ['showRankAssessments']],
+    [scanSolvedLanguages,     'ul.comment-actions',      {existing},           ['scanSolvedLanguages']],
+    [solutionTimestamps,      '.js-result-group',        {existing},           ['solutionTimestamps']],
+    [reviewTimestamps,        '.js-solution-group',      {existing},           ['solutionTimestamps']],
+    [buildPolyglotConfigMenu, 'a.js-sign-out',           {existing},           []],
 ];
 
 
