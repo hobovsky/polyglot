@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.14.2
+// @version 1.14.3
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -11,12 +11,12 @@
 // @grant   GM_addStyle
 // @grant   GM_setClipboard
 // @connect self
-// @require     http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
-// @require     http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
+// @require http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
+// @require http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
 // @require https://greasyfork.org/scripts/21927-arrive-js/code/arrivejs.js?version=198809
 // @require https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
-// @require     https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
-// @require     https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
 
 /****************************************************************
@@ -38,15 +38,15 @@ WHERE CAN I DOWNLOAD IT FROM?
 
  WHAT FEATURES DOES IT PROVIDE?
 ------------------------------
- - You can copy content of code boxes into clipboard.
- - "Spoiler" flags are visible all the time and do not dis/re-appear
-   in a very annoying manner.
- - Contents of "Solutions" and "Past solutions" views are displayed in
-   tabs by language.
+ - You can copy content of code boxes to clipboard.
+ - "Spoiler" flags are visible all the time and do not dis/re-appear in a very annoying manner.
+ - Contents of "Solutions" and "Past solutions" views are displayed in tabs by language.
  - Leaderboards: "Solved kata is default leaderboard (since "Overall"
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
+ - Show attempted languages of a user in "Discourse".
+ - Show timestamps of solution groups.
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -166,13 +166,16 @@ function fetchError() {
 }
 
 /********************************
- *            Clipboard          *
- *********************************/
+ *            Clipboard         *
+ ********************************/
 
 const btnCaption = "Copy to clipboard";
 function copyToClipboardFunc(codeElem) {
     return function() {
         let code = codeElem.text();
+        if(isLCcode(codeElem) && glotGetOption('lclambdas')) {
+            code = code.replace(/λ/g, '\\');
+        }
         GM_setClipboard(code, "text");
         jQuery.notify(code.length + " characters copied to clipboard.", "info");
     };
@@ -195,8 +198,26 @@ function addCopyButton(codeElem) {
 }
 
 /********************************
- *        Tabbed Languages       *
- *********************************/
+ *           LC lambdas         *
+ ********************************/
+
+function isLCcode(codeElem) {
+    return codeElem.data("language") === "lambdacalc";
+}
+
+function lclambdas(codeElem) {
+    codeElem = jQuery(codeElem);
+    if (!isLCcode(codeElem)) return;
+
+    let keywords = codeElem.children("span.cm-keyword");
+    for(let i = 0; i < keywords.length; ++i) {
+        if(keywords[i].innerText === '\\') keywords[i].innerText = 'λ';
+    }
+}
+
+/********************************
+ *        Tabbed Languages      *
+ ********************************/
 let tabIdSerial = 1;
 function tabidizeByLanguage(solutionPanel) {
     solutionPanel = jQuery(solutionPanel);
@@ -245,7 +266,7 @@ function tabidizePastSolutions(divElem) {
 
 /********************************
  *       Rank assessments       *
- *********************************/
+ ********************************/
 
 function addRankAssessmentBreakdown(breakdown, elem) {
 
@@ -376,7 +397,7 @@ function addTimeStamp(sol, id){
 
 /********************************
  *           Settings           *
- *********************************/
+ ********************************/
 const checkBoxes = [
     {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
     {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
@@ -387,6 +408,7 @@ const checkBoxes = [
     {name: 'showRankAssessments',            label: 'Show rank assessments breakdown'},
     {name: 'scanSolvedLanguages',            label: 'Show attempted languages'},
     {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'},
+    {name: 'lclambdas',                      label: 'Show lambdas for LC solutions'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -486,8 +508,8 @@ function buildPolyglotConfigMenu(menuElement) {
 
 
 /********************************
- *          DOM Listeners        *
- *********************************/
+ *          DOM Listeners       *
+ ********************************/
 
 const spoilerFlagOpacityChange=function(){
     jQuery(this).css("opacity", "1");
@@ -525,7 +547,7 @@ let csrfToken = jQuery.cookie("CSRF-TOKEN"); // GM_getValue("glot.user.csrf_toke
 // is to have it stored under the "glot.user.session_id" key of the script storage.
 let sessionId = jQuery.cookie("_session_id") || GM_getValue("glot.user.session_id", null);
 
-const scanSolvedLanguages=function(commentActionsElem) {
+const scanSolvedLanguages = function(commentActionsElem) {
 
     const kataId = getViewedKataId();
     if(kataId !== recentKataId) {
@@ -555,6 +577,10 @@ const scanSolvedLanguages=function(commentActionsElem) {
         let commentContainer = elem.closest('li.comment');
         let commentId = commentContainer.attr('id');
         let userId = userMap[commentId];
+        if (userId === undefined) {
+            jQuery.notify("Could not find user id. Try reloading the page.", "error");
+            return;
+        }
 
         for(let lang of allKataLangs) {
             let url = `https://www.codewars.com/kata/${kataId}/${lang}/solution/${userId}`;
@@ -597,7 +623,7 @@ const scanSolvedLanguages=function(commentActionsElem) {
     link.on("click", { link }, doScanLanguages);
 }
 
-const existing=true, onceOnly=false;
+const existing = true, onceOnly = false;
 
 const LISTENERS_CONFIG = [
     [tabidizeByLanguage,      "div.list-item-solutions",                  {existing, onceOnly}, ['showSolutionsTabs']],
@@ -610,6 +636,7 @@ const LISTENERS_CONFIG = [
     [scanSolvedLanguages,     'ul.comment-actions',                       {existing},           ['scanSolvedLanguages']],
     [solutionTimestamps,      '.js-result-group',                         {existing},           ['solutionTimestamps']],
     [reviewTimestamps,        '.js-solution-group',                       {existing},           ['solutionTimestamps']],
+    [lclambdas,               'code',                                     {existing},           ['lclambdas']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 
