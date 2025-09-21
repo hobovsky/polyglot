@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.14.3
+// @version 1.14.4
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -557,7 +557,6 @@ const scanSolvedLanguages = function(commentActionsElem) {
             return;
         }
 
-        console.info("Scan attempted languages");
         recentKataId = kataId;
         allKataLangs = jQuery('div#language_dd dd').toArray().map(dd => jQuery(dd).data('value')).filter(Boolean).sort();
         let allCommentsData = jQuery('div.comments-list-component').data('view-data');
@@ -588,7 +587,7 @@ const scanSolvedLanguages = function(commentActionsElem) {
             function solutionDownloaded(resp) {
                 if (resp.readyState !== 4) return;
                 let cwResp = resp.response;
-                if(cwResp.completed || cwResp.solution) {
+                if(cwResp.completed || cwResp.solution || "denied" in cwResp) {
                     let userlink = elem.parents('ul').first();
                     userlink.append('<li><span class="bullet"/>' + (cwResp.denied ? (`<del>${resp.context.lang}</del>`) : (`<a href='https://www.codewars.com/kata/${kataId}/discuss/${lang}#${commentId}'>${resp.context.lang}</a>`)) + "</li>");
                 }
