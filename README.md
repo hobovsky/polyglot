@@ -28,7 +28,9 @@ WHERE CAN I DOWNLOAD IT FROM?
    ranking does not measure anything useful). Also, leaderboards are
    automatically scrolled to show your score.
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
- - Presents languages a user attempted the kata with (see below).
+ - Show attempted languages of a user in "Discourse" (see below).
+ - Show timestamps of solution groups.
+ - Show a toggle for raw markdown comments.
 
  HOW TO UNINSTALL IT?
 --------------------
