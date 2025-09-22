@@ -126,17 +126,20 @@ let css = `
     padding: 5px 10px 5px;
     opacity: 0.7;
 }
+li:has(> .switch) {
+    margin-top: -3px;
+}
 .switch {
     position: relative;
-    width: 40px;
-    height: 20px;
+    width: 30px;
+    height: 10px;
     display: inline-block;
     white-space: pre;
 }
 .switch span {
     position: absolute;
     background-color: #ccc;
-    border-radius: 17px;
+    border-radius: 5px;
     cursor: pointer;
     top: 0;
     left: 0;
@@ -150,23 +153,24 @@ let css = `
     content: "";
     position: absolute;
     left: 3px;
-    bottom: 3px;
-    height: 14px;
-    width: 14px;
+    bottom: 2px;
+    height: 6px;
+    width: 6px;
 }
 input:checked + span {
   background-color: darkgreen;
 }
 input:checked + span::before {
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 .switch input {
     display: none;
 }
 .switch p {
     position: absolute;
-    left: 45px;
-    font-size: 10pt;
+    left: 0;
+    top: 9px;
+    font-size: 7pt;
     color: var(--color-ui-text-lc);
 }
 `;
@@ -442,7 +446,7 @@ function addTimeStamp(sol, id){
 /********************************
  *         Raw Markdown         *
  ********************************/
-const switchButton = `<li><label class="switch"><input type="checkbox"><span></span><p>raw markdown</p></label></li>`;
+const switchButton = `<li><span class="bullet"></span><label class="switch"><input type="checkbox"><span></span><p>markdown</p></label></li>`;
 const orginalComments = new Map();
 function rawMarkdown(element) {
     let elem = jQuery(element);
@@ -476,7 +480,7 @@ const checkBoxes = [
     {name: 'scanSolvedLanguages',            label: 'Show attempted languages'},
     {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'},
     {name: 'lclambdas',                      label: 'Show lambdas for LC solutions'},
-    {name: 'rawMarkdown',                    label: 'Show "raw markdown" switch'},
+    {name: 'rawMarkdown',                    label: 'Show "markdown" switch'},
 ];
 
 const glotSettingsKey = 'glot.settings';
