@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.14.4
+// @version 1.15.0
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -47,6 +47,7 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Beta kata: uses Codwewars API to fetch and present breakdown of rank votes.
  - Show attempted languages of a user in "Discourse".
  - Show timestamps of solution groups.
+ - Show a toggle for raw markdown comments.
 
  HOW TO UNINSTALL IT?
 --------------------
@@ -124,6 +125,53 @@ let css = `
     float: right;
     padding: 5px 10px 5px;
     opacity: 0.7;
+}
+li:has(> .switch) {
+    margin-top: -3px;
+}
+.switch {
+    position: relative;
+    width: 30px;
+    height: 10px;
+    display: inline-block;
+    white-space: pre;
+}
+.switch span {
+    position: absolute;
+    background-color: #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: background-color 1s;
+}
+.switch span::before {
+    background-color: white;
+    border-radius: 50%;
+    content: "";
+    position: absolute;
+    left: 3px;
+    bottom: 2px;
+    height: 6px;
+    width: 6px;
+}
+input:checked + span {
+  background-color: darkgreen;
+}
+input:checked + span::before {
+  transform: translateX(18px);
+}
+.switch input {
+    display: none;
+}
+.switch p {
+    position: absolute;
+    left: 0;
+    top: 9px;
+    font-size: 7pt;
+    color: var(--color-ui-text-lc);
 }
 `;
 GM_addStyle(css);
@@ -396,6 +444,29 @@ function addTimeStamp(sol, id){
 
 
 /********************************
+ *         Raw Markdown         *
+ ********************************/
+const switchButton = `<li><span class="bullet"></span><label class="switch"><input type="checkbox"><span></span><p>markdown</p></label></li>`;
+const orginalComments = new Map();
+function rawMarkdown(element) {
+    let elem = jQuery(element);
+    let ul = elem.parent().find('h6').find('ul')[0];
+    let button = jQuery(switchButton);
+    button.on('change', toggleMarkdown);
+    button.appendTo(ul);
+}
+function toggleMarkdown({ target: toggle }) {
+    let comment = jQuery(toggle).parents("h6").first().next().first();
+    if(toggle.checked) {
+        if(!orginalComments.has(toggle)) orginalComments.set(toggle, comment[0].innerHTML);
+        comment.html(`<pre style="white-space:pre-wrap">${comment[0].dataset.markdown}</pre>`);
+    } else {
+        comment[0].innerHTML = orginalComments.get(toggle);
+    }
+}
+
+
+/********************************
  *           Settings           *
  ********************************/
 const checkBoxes = [
@@ -409,6 +480,7 @@ const checkBoxes = [
     {name: 'scanSolvedLanguages',            label: 'Show attempted languages'},
     {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'},
     {name: 'lclambdas',                      label: 'Show lambdas for LC solutions'},
+    {name: 'rawMarkdown',                    label: 'Show "markdown" switch'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -636,6 +708,7 @@ const LISTENERS_CONFIG = [
     [solutionTimestamps,      '.js-result-group',                         {existing},           ['solutionTimestamps']],
     [reviewTimestamps,        '.js-solution-group',                       {existing},           ['solutionTimestamps']],
     [lclambdas,               'code',                                     {existing},           ['lclambdas']],
+    [rawMarkdown,             '.comment-markdown',                        {existing},           ['rawMarkdown']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
 ];
 
