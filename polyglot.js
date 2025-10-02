@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.15.0
+// @version 1.16.0
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
 // @grant   GM_xmlhttpRequest
 // @grant   GM_setValue
 // @grant   GM_getValue
+// @grant   GM_deleteValue
 // @grant   GM_addStyle
 // @grant   GM_setClipboard
 // @connect self
@@ -96,6 +97,8 @@ $.noConflict();
 const DROPDOWN_STYLE_CLASS = 'mt-1 block w-full pl-3 pr-10 py-2 text-base dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-cgray-300 dark:focus:ring-cgray-600 focus:border-cgray-300 dark:focus:border-cgray-600 sm:text-sm rounded-md';
 
 jQuery("head").append(`<link href="${JQUERYUI_CSS_URL}" rel="stylesheet" type="text/css">`);
+
+GM_deleteValue("glot.user.session_id");
 
 function isElementInViewport(el) {
     if (typeof jQuery === "function" && el instanceof jQuery) {
@@ -538,20 +541,11 @@ function buildConfigDialog() {
         </fieldset>
       </form>
       <hr style="margin: 10px"/>
-      <p>
-        To use the "Show Attempted Languages" feature, the script needs to know ID of your Codewars session.
-        It is stored as a <code>_session_id</code> cookie and can be found with developer tools of your browser.
-      </p>
-
-      <label for="cw_session_id">Codewars session ID:</label>
-      <input id="cw_session_id" type="password" size="33"/>
-      <hr style="margin: 10px"/>
       <p><b>Note:</b> some settings are applied after refresh.</p>
     </div>`);
 
     attachBoxListeners(checkBoxes);
-    jQuery("#cw_session_id").prop("value", GM_getValue("glot.user.session_id", ""));
-
+    
     return jQuery('#glotSettingsDialog').dialog({
       autoOpen: false,
       // height: 400,
@@ -561,7 +555,6 @@ function buildConfigDialog() {
           {
               text: "OK",
               click: function() {
-                GM_setValue("glot.user.session_id", jQuery("#cw_session_id").prop("value"));
                 jQuery(this).dialog("close");
               }
           }
@@ -615,17 +608,14 @@ let allKataLangs;
 let userMap = {};
 
 let csrfToken = jQuery.cookie("CSRF-TOKEN"); // GM_getValue("glot.user.csrf_token", null);
-// Session cookie is HTTP-only and cannot be read with JS. The only way to use it in this function
-// is to have it stored under the "glot.user.session_id" key of the script storage.
-let sessionId = jQuery.cookie("_session_id") || GM_getValue("glot.user.session_id", null);
 
 const scanSolvedLanguages = function(commentActionsElem) {
 
     const kataId = getViewedKataId();
     if(kataId !== recentKataId) {
 
-        if(!csrfToken || !sessionId) {
-            console.info("CSRF token or session ID cookie are not set. Solved languages will not be fetched.");
+        if(!csrfToken) {
+            console.info("CSRF token is not set. Solved languages will not be fetched.");
             return;
         }
 
@@ -678,7 +668,7 @@ const scanSolvedLanguages = function(commentActionsElem) {
                     lang:   lang
                 },
                 responseType: "json",
-                cookie: `_session_id=${sessionId}`,
+                anonymous: false,
                 headers: {
                     'User-Agent': 'Polyglot User Script',
                     'x-csrf-token': csrfToken
