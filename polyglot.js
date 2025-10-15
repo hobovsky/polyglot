@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.17.0
+// @version 1.17.1
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -192,10 +192,10 @@ function getViewedKataId() {
 function getTrainingLanguage() {
     const currentUrl = window.location.href;
     const parts = currentUrl.split('/');
-    if (parts.length < 2 || parts[parts.length-2] != 'train') {
+    if (parts.length < 2 || parts.at(-2) != 'train') {
         return null;
     }
-    return parts[parts.length-1];
+    return parts.at(-1);
 }
 
 function getKataLanguages() {
@@ -492,10 +492,12 @@ function getLeaderboardPositionUrl(lang, user) {
 }
 
 async function fetchLeaderboardRank(lang, user) {
+    if (!lang) return null;
     if (!user) user = getUserName();
     const response = await fetch(getLeaderboardPositionUrl(lang, user));
     if (response.status === 404) jQuery.notify("User not found!", "error");
     const userData = await response.json();
+    if (!userData) return null;
     return userData.data.find(({ username }) => username === user)?.position;
 }
 
@@ -517,17 +519,18 @@ function updateRank(lang, rank, display=false) {
 
 async function leaderboardUpdates(elt) {
     const notCompleted = elt.classList.contains('is-hidden');
+    const fetchUpdateRank = (lang, display) => fetchLeaderboardRank(lang).then(rank => rank && updateRank(lang, rank, display));
     if (notCompleted) {
-        fetchLeaderboardRank('overall').then(rank => updateRank('overall', rank));
+        fetchUpdateRank('overall');
         jQuery(document).arrive('#language_dd>.mr-4>i', {existing, fireOnAttributesModification}, function() {
             const lang = document.querySelector('#language_dd>dl>dd[class="is-active"]')?.getAttribute('data-value') || getTrainingLanguage();
-            fetchLeaderboardRank(lang).then(rank => updateRank(lang, rank));
+            fetchUpdateRank(lang);
         });
         return;
     }
     const trainingLang = getTrainingLanguage();
-    fetchLeaderboardRank('overall').then(rank => updateRank('overall', rank, true));
-    fetchLeaderboardRank(trainingLang).then(rank => updateRank(trainingLang, rank, true));
+    fetchUpdateRank('overall', true);
+    fetchUpdateRank(trainingLang, true);
 }
 
 
