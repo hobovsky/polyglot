@@ -496,7 +496,7 @@ async function fetchLeaderboardRank(lang, user) {
     const response = await fetch(getLeaderboardPositionUrl(lang, user));
     if (response.status === 404) jQuery.notify("User not found!", "error");
     const userData = await response.json();
-    return userData.data.find(({ username }) => username === user).position;
+    return userData.data.find(({ username }) => username === user)?.position;
 }
 
 function displayRankUpdate(lang, oldRank, newRank) {
@@ -518,14 +518,16 @@ function updateRank(lang, rank, display=false) {
 async function leaderboardUpdates(elt) {
     const notCompleted = elt.classList.contains('is-hidden');
     if (notCompleted) {
-        const kataLangs = getKataLanguages();
-        kataLangs.push('overall')
-        kataLangs.forEach(lang => fetchLeaderboardRank(lang).then(rank => updateRank(lang, rank)));
+        fetchLeaderboardRank('overall').then(rank => updateRank('overall', rank));
+        jQuery(document).arrive('#language_dd>.mr-4>i', {existing, fireOnAttributesModification}, function() {
+            const lang = document.querySelector('#language_dd>dl>dd[class="is-active"]')?.getAttribute('data-value') || getTrainingLanguage();
+            fetchLeaderboardRank(lang).then(rank => updateRank(lang, rank));
+        });
         return;
     }
     const trainingLang = getTrainingLanguage();
-    const leaderboardRank = await fetchLeaderboardRank(trainingLang);
-    updateRank(trainingLang, leaderboardRank, true);
+    fetchLeaderboardRank('overall').then(rank => updateRank('overall', rank, true));
+    fetchLeaderboardRank(trainingLang).then(rank => updateRank(trainingLang, rank, true));
 }
 
 
