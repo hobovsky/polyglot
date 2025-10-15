@@ -49,6 +49,7 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Show attempted languages of a user in "Discourse".
  - Show timestamps of solution groups.
  - Show a toggle for raw markdown comments.
+ - Show notifications after ranking up on leaderboards.
 
  HOW TO UNINSTALL IT?
 --------------------
