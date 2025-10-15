@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.16.0
+// @version 1.17.0
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -839,3 +839,4 @@ const langNames = {
     "typescript": "TypeScript",
     "vb": "VB",
 }
+
