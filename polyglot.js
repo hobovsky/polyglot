@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.16.0
+// @version 1.17.0
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -187,6 +187,20 @@ function getViewedKataId() {
         return null;
     }
     return parts[kataPartIdx + 1];
+}
+
+function getTrainingLanguage() {
+    const currentUrl = window.location.href;
+    const parts = currentUrl.split('/');
+    if (parts.length < 2 || parts[parts.length-2] != 'train') {
+        return null;
+    }
+    return parts[parts.length-1];
+}
+
+function getKataLanguages() {
+    const elts = jQuery("#language_dd>dl>dd").get();
+    return elts.map(elt => elt.getAttribute("data-value"));
 }
 
 function isBetaKata() {
@@ -470,6 +484,54 @@ function toggleMarkdown({ target: toggle }) {
 
 
 /********************************
+ *     Leaderboard Updates      *
+ ********************************/
+
+function getLeaderboardPositionUrl(lang, user) {
+    return `https://www.codewars.com/api/v1/leaders/ranks/${lang}?user=${user}`;
+}
+
+async function fetchLeaderboardRank(lang, user) {
+    if (!user) user = getUserName();
+    const response = await fetch(getLeaderboardPositionUrl(lang, user));
+    if (response.status === 404) jQuery.notify("User not found!", "error");
+    const userData = await response.json();
+    return userData.data.find(({ username }) => username === user)?.position;
+}
+
+function displayRankUpdate(lang, oldRank, newRank) {
+    const langName = langNames[lang] || "Overall";
+    const msg = `${langName} leaderboard position improved: ${oldRank} → ${newRank}`;
+    jQuery.notify(msg, "success");
+}
+
+const langRanksKey = 'glot.langRanks';
+function updateRank(lang, rank, display=false) {
+    const langRanks = GM_getValue(langRanksKey) || {};
+    if ((langRanks[lang] || 0) > rank && display) {
+        displayRankUpdate(lang, langRanks[lang], rank);
+    }
+    langRanks[lang] = rank;
+    GM_setValue(langRanksKey, langRanks);
+}
+
+async function leaderboardUpdates(elt) {
+    const notCompleted = elt.classList.contains('is-hidden');
+    if (notCompleted) {
+        fetchLeaderboardRank('overall').then(rank => updateRank('overall', rank));
+        jQuery(document).arrive('#language_dd>.mr-4>i', {existing, fireOnAttributesModification}, function() {
+            const lang = document.querySelector('#language_dd>dl>dd[class="is-active"]')?.getAttribute('data-value') || getTrainingLanguage();
+            fetchLeaderboardRank(lang).then(rank => updateRank(lang, rank));
+        });
+        return;
+    }
+    const trainingLang = getTrainingLanguage();
+    fetchLeaderboardRank('overall').then(rank => updateRank('overall', rank, true));
+    fetchLeaderboardRank(trainingLang).then(rank => updateRank(trainingLang, rank, true));
+}
+
+
+/********************************
  *           Settings           *
  ********************************/
 const checkBoxes = [
@@ -484,6 +546,7 @@ const checkBoxes = [
     {name: 'solutionTimestamps',             label: 'Show timestamps of solution groups'},
     {name: 'lclambdas',                      label: 'Show lambdas for LC solutions'},
     {name: 'rawMarkdown',                    label: 'Show "markdown" switch'},
+    {name: 'leaderboardUpdates',             label: 'Show leaderboard position updates'},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -545,7 +608,7 @@ function buildConfigDialog() {
     </div>`);
 
     attachBoxListeners(checkBoxes);
-    
+
     return jQuery('#glotSettingsDialog').dialog({
       autoOpen: false,
       // height: 400,
@@ -684,7 +747,7 @@ const scanSolvedLanguages = function(commentActionsElem) {
     link.on("click", { link }, doScanLanguages);
 }
 
-const existing = true, onceOnly = false;
+const existing = true, onceOnly = false, fireOnAttributesModification = true;
 
 const LISTENERS_CONFIG = [
     [tabidizeByLanguage,      "div.list-item-solutions",                  {existing, onceOnly}, ['showSolutionsTabs']],
@@ -700,6 +763,7 @@ const LISTENERS_CONFIG = [
     [lclambdas,               'code',                                     {existing},           ['lclambdas']],
     [rawMarkdown,             '.comment-markdown',                        {existing},           ['rawMarkdown']],
     [buildPolyglotConfigMenu, 'a.js-sign-out',                            {existing},           []],
+    [leaderboardUpdates,      '#submit_btn',                              {existing, fireOnAttributesModification}, ['leaderboardUpdates']],
 ];
 
 
@@ -712,3 +776,67 @@ for(const [func, target, options, conditions] of LISTENERS_CONFIG){
         func.call(this, arg)
     });
 }
+
+
+
+const langNames = {
+    "agda": "Agda",
+    "bf": "BF",
+    "c": "C",
+    "cfml": "CFML",
+    "clojure": "Clojure",
+    "cobol": "COBOL",
+    "coffeescript": "CoffeeScript",
+    "commonlisp": "CommonLisp",
+    "coq": "Coq",
+    "cpp": "C++",
+    "crystal": "Crystal",
+    "csharp": "C#",
+    "d": "D",
+    "dart": "Dart",
+    "elixir": "Elixir",
+    "elm": "Elm",
+    "erlang": "Erlang",
+    "factor": "Factor",
+    "forth": "Forth",
+    "fortran": "Fortran",
+    "fsharp": "F#",
+    "go": "Go",
+    "groovy": "Groovy",
+    "haskell": "Haskell",
+    "haxe": "Haxe",
+    "idris": "Idris",
+    "java": "Java",
+    "javascript": "JavaScript",
+    "julia": "Julia",
+    "kotlin": "Kotlin",
+    "lambdacalc": "λ Calculus",
+    "lean": "Lean",
+    "lua": "Lua",
+    "nasm": "NASM",
+    "nim": "Nim",
+    "objc": "Objective-C",
+    "ocaml": "OCaml",
+    "pascal": "Pascal",
+    "perl": "Perl",
+    "php": "PHP",
+    "powershell": "PowerShell",
+    "prolog": "Prolog",
+    "purescript": "PureScript",
+    "python": "Python",
+    "r": "R",
+    "racket": "Racket",
+    "raku": "Raku",
+    "reason": "Reason",
+    "riscv": "RISC-V",
+    "ruby": "Ruby",
+    "rust": "Rust",
+    "scala": "Scala",
+    "shell": "Shell",
+    "solidity": "Solidity",
+    "sql": "SQL",
+    "swift": "Swift",
+    "typescript": "TypeScript",
+    "vb": "VB",
+}
+
