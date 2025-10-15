@@ -519,7 +519,7 @@ function updateRank(lang, rank, display=false) {
 
 async function leaderboardUpdates(elt) {
     const notCompleted = elt.classList.contains('is-hidden');
-    const fetchUpdateRank = (lang, display) => fetchLeaderboardRank(lang).then(rank => rank && updateRank(lang, display ? rank : rank+1, display));
+    const fetchUpdateRank = (lang, display) => fetchLeaderboardRank(lang).then(rank => rank && updateRank(lang, rank, display));
     if (notCompleted) {
         fetchUpdateRank('overall');
         jQuery(document).arrive('#language_dd>.mr-4>i', {existing, fireOnAttributesModification}, function() {
