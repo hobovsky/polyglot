@@ -540,7 +540,7 @@ async function leaderboardUpdates(elt) {
  ********************************/
 const checkBoxes = [
     {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
-    {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
+    {name: 'showPastSolutionsTabs',          label: 'Show previous solutions in the trainer in tabs'},
     {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
     {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
