@@ -313,6 +313,24 @@ function tabidizeByLanguage(solutionPanel) {
 function tabidizePastSolutions(divElem) {
     let solutionPanel = jQuery(divElem).first();
 
+    // Remove duplicate langs and solutions
+    const langGroups = {}; // Key : [Set(codeSnippet), <elt>]
+    solutionPanel.children().each((_, child) => {
+        const lang = child.children[0].textContent;
+        const langExists = Boolean(langGroups[lang]);
+        if (!langExists) langGroups[lang] = [new Set(), child];
+        const [seenCode, parent] = langGroups[lang];
+        for (const codeElt of [...child.children].slice(1)) {
+            if (seenCode.has(codeElt.textContent)) {
+                if (!langExists) codeElt.remove();
+                continue;
+            }
+            seenCode.add(codeElt.textContent);
+            if (langExists) parent.appendChild(codeElt);
+        }
+        if (langExists) child.remove();
+    });
+
     let langDivs = solutionPanel.children();
     langDivs.wrapAll('<div class="langTabs"/>');
     let langTabs = solutionPanel.children("div.langTabs").first();
