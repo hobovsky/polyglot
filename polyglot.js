@@ -320,13 +320,19 @@ function tabidizePastSolutions(divElem) {
     let langTabsList = langTabs.children("ul.tabsList:first").first();
 
     let langs = langDivs.children("p");
+    const trainingLang = langNames[getTrainingLanguage()];
+    let tabIndex = 0;
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
+        if (langHeader.text() == trainingLang) {
+            tabIndex = i;
+        }
         langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text() + "</a></li>");
         langHeader.parent().attr("id", "langTab-" + tabIdSerial++);
     });
+
     langs.remove();
-    let tabsPanel = langTabs.tabs();
+    let tabsPanel = langTabs.tabs({"active": tabIndex ?? 0});
 }
 
 
