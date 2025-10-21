@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.17.1
+// @version 1.17.2
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -313,6 +313,24 @@ function tabidizeByLanguage(solutionPanel) {
 function tabidizePastSolutions(divElem) {
     let solutionPanel = jQuery(divElem).first();
 
+    // Remove duplicate langs and solutions
+    const langGroups = {}; // Key : [Set(codeSnippet), <elt>]
+    solutionPanel.children().each((_, child) => {
+        const lang = child.children[0].textContent;
+        const langExists = Boolean(langGroups[lang]);
+        if (!langExists) langGroups[lang] = [new Set(), child];
+        const [seenCode, parent] = langGroups[lang];
+        for (const codeElt of [...child.children].slice(1)) {
+            if (seenCode.has(codeElt.textContent)) {
+                if (!langExists) codeElt.remove();
+                continue;
+            }
+            seenCode.add(codeElt.textContent);
+            if (langExists) parent.appendChild(codeElt);
+        }
+        if (langExists) child.remove();
+    });
+
     let langDivs = solutionPanel.children();
     langDivs.wrapAll('<div class="langTabs"/>');
     let langTabs = solutionPanel.children("div.langTabs").first();
@@ -320,13 +338,19 @@ function tabidizePastSolutions(divElem) {
     let langTabsList = langTabs.children("ul.tabsList:first").first();
 
     let langs = langDivs.children("p");
+    const trainingLang = langNames[getTrainingLanguage()];
+    let tabIndex = 0;
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
+        if (langHeader.text() == trainingLang) {
+            tabIndex = i;
+        }
         langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text() + "</a></li>");
         langHeader.parent().attr("id", "langTab-" + tabIdSerial++);
     });
+
     langs.remove();
-    let tabsPanel = langTabs.tabs();
+    let tabsPanel = langTabs.tabs({"active": tabIndex ?? 0});
 }
 
 
@@ -540,7 +564,7 @@ async function leaderboardUpdates(elt) {
  ********************************/
 const checkBoxes = [
     {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs'},
-    {name: 'showastSolutionsTabs',           label: 'Show previous solutions in the trainer in tabs'},
+    {name: 'showPastSolutionsTabs',          label: 'Show previous solutions in the trainer in tabs'},
     {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button'},
     {name: 'preferCompletedKataLeaderboard', label: 'Prefer "Completed kata" leaderboard'},
     {name: 'scrollLeaderboard',              label: 'Auto-scroll leaderboards to show your position'},
