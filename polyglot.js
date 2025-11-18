@@ -267,7 +267,7 @@ function fetchError() {
  *            Clipboard         *
  ********************************/
 
-const btnCaption = "Copy to clipboard";
+const btnCaption = "\u{1F4CB}";
 function copyToClipboardFunc(codeElem) {
     return function() {
         let code = codeElem.text();
@@ -287,11 +287,17 @@ function addCopyButton(codeElem) {
     }
 
     let parent = codeElem.parent("pre");
-    if (parent.length && !parent.children("button.glotBtnCopy").length) {
-        parent.prepend("<button class='glotBtnCopy' type='button'>" + btnCaption + "</button>");
+    if (parent.siblings(".glot-copy-container").length) {
+        return;
     }
-    let btn = parent.children("button").first();
-    // handler must be reattached every time
+    parent.wrap("<div class='glot-code-wrapper' style='position: relative;'></div>");
+    parent.before(`
+        <div class='glot-copy-container' style='position: absolute; top: 5px; right: 5px; z-index: 100;'>
+            <button class='glotBtnCopy' type='button' title='Copy to clipboard'>${btnCaption}</button>
+        </div>
+    `);
+
+    let btn = parent.prev().find("button").first();
     btn.on("click", copyToClipboardFunc(codeElem));
 }
 
