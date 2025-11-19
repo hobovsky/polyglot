@@ -638,7 +638,9 @@ const menuTemplates = {
     "Default Menu Items": null,
     ...Object.fromEntries(defaultMenuLabels.map((v,i)=>[v,defaultNavMenu[i]])),
     "Custom Templates": null,
-    "Beta kata": {icon: "baby", url: "/kata/search/my-languages?q=&beta=true", text: "Beta", subtext: "Discover Beta kata: the good, the old, and the unhinged", tooltip: "Beta Kata"}
+    "Beta kata": {icon: "baby", url: "/kata/search/my-languages?q=&beta=true", text: "Beta", subtext: "Discover Beta kata: the good, the old, and the unhinged", tooltip: "Beta Kata"},
+    "Train current lang": {icon: "%currentlang%", url: "/kata/search/%currentlang%?q=&xids=completed&beta=false&order_by=sort_date%20desc", text: "%currentlang% Kata", subtext: "Continue training in %currentlang%", tooltip: "%currentlang% kata"},
+    "Current lang leaderboard": {icon: "%currentlang%-leaderboard", url: "/users/leaderboard/ranks?language=%currentlang%", text: "%currentlang% Leaderboard", subtext: "See your progress in %currentlang%", tooltip: "%currentlang% Leaderboard"}
 }
 
 
@@ -683,7 +685,8 @@ function openEditTileWindow(index) {
       <p style="font-size: 0.9rem;"><i>Tip: Use %currentlang% to dynamically reference the last trained lang.</i></p>
     </div>`);
 
-    document.getElementById("glotmenuTemplates").addEventListener("change", e => prefillFields(menuTemplates[e.target.value]));
+    const templatesChoiceElt = document.getElementById("glotmenuTemplates");
+    templatesChoiceElt.addEventListener("change", e => prefillFields(menuTemplates[e.target.value]));
 
     function prefillFields(tileOpts) {
         for (const opt of ["icon", "url", "text", "subtext", "tooltip"]) {
@@ -698,7 +701,7 @@ function openEditTileWindow(index) {
             elt.checked = currentSetting;
         }
 
-        if (isNew) {
+        if (isNew && !templatesChoiceElt.value) {
             const currentUrl = String(window.location);
             document.getElementById(idPrefix + "url").value = currentUrl;
             const iconElt = document.getElementById(idPrefix + "icon");
