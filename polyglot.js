@@ -611,7 +611,6 @@ function setPageLocalStorage(key, value) {
 
 function applyCodeMirrorSettings() {
     const tabSize = Number(glotGetOption("codeMirrorTabSize") || 4);
-    console.log(tabSize, glotGetOption("codeMirrorIndentWithTabs"), glotGetOption("codeMirrorAutoCloseBrackets"), glotGetOption("codeMirrorSmartIndent"))
     const cmSettings = {
         tabSize: tabSize,
         indentWithTabs: !!!glotGetOption("codeMirrorIndentWithTabs"),
