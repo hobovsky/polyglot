@@ -600,14 +600,6 @@ async function leaderboardUpdates(elt) {
 /********************************
  *       CodeMirror Settings    *
  ********************************/
-function setPageLocalStorage(key, value) {
-    const script = document.createElement('script');
-    script.textContent = `
-        localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});
-    `;
-    document.documentElement.appendChild(script);
-    script.remove();
-}
 
 function applyCodeMirrorSettings() {
     const tabSize = Number(glotGetOption("codeMirrorTabSize") || 4);
@@ -618,7 +610,7 @@ function applyCodeMirrorSettings() {
         smartIndent: !!glotGetOption("codeMirrorSmartIndent")
     };
 
-    setPageLocalStorage("editorOptions", JSON.stringify(cmSettings));
+    unsafeWindow.localStorage.setItem("editorOptions", JSON.stringify(cmSettings));
 }
 
 
