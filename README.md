@@ -30,6 +30,7 @@ WHERE CAN I DOWNLOAD IT FROM?
  - Show timestamps of solution groups.
  - Show a toggle for raw markdown comments.
  - Show notifications after ranking up on leaderboards.
+ - Configure behavior of CodeMirror editor: tab size, tabs vs spaces, auto-closing brackets and parentheses.
 
  HOW TO UNINSTALL IT?
 --------------------
