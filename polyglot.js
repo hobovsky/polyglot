@@ -598,6 +598,23 @@ async function leaderboardUpdates(elt) {
 
 
 /********************************
+ *       CodeMirror Settings    *
+ ********************************/
+
+function applyCodeMirrorSettings() {
+    const tabSize = Number(glotGetOption("codeMirrorTabSize") || 4);
+    const cmSettings = {
+        tabSize: tabSize,
+        indentWithTabs: !!!glotGetOption("codeMirrorIndentWithTabs"),
+        autoCloseBrackets: !!glotGetOption("codeMirrorAutoCloseBrackets"),
+        smartIndent: !!glotGetOption("codeMirrorSmartIndent")
+    };
+
+    unsafeWindow.localStorage.setItem("editorOptions", JSON.stringify(cmSettings));
+}
+
+
+/********************************
  *       Custom Nav Menu        *
  ********************************/
 
@@ -902,6 +919,7 @@ function applyEditing() {
  *           Settings           *
  ********************************/
 const checkBoxes = [
+    {type: 'section',                        label: 'General Settings'},
     {name: 'showSolutionsTabs',              label: 'Show solutions in your profile in tabs',           choice: Boolean},
     {name: 'showPastSolutionsTabs',          label: 'Show previous solutions in the trainer in tabs',   choice: Boolean},
     {name: 'showCopyToClipboardButtons',     label: 'Show "Copy to Clipboard" button',                  choice: Boolean},
@@ -915,6 +933,11 @@ const checkBoxes = [
     {name: 'rawMarkdown',                    label: 'Show "markdown" switch',                           choice: Boolean},
     {name: 'leaderboardUpdates',             label: 'Show leaderboard position updates',                choice: Boolean},
     {name: 'customNavMenu',                  label: 'Use custom navigation menu',                       choice: Boolean},
+    {type: 'section',                        label: 'CodeMirror Settings'},
+    {name: 'codeMirrorTabSize',              label: 'CodeMirror tab size',                              choice: ["2", "4", "8"]},
+    {name: 'codeMirrorIndentWithTabs',       label: 'Indent with spaces instead of tabs',               choice: Boolean},
+    {name: 'codeMirrorAutoCloseBrackets',    label: 'Auto close brackets',                              choice: Boolean},
+    {name: 'codeMirrorSmartIndent',          label: 'Automatically indent code',                        choice: Boolean},
 ];
 
 const glotSettingsKey = 'glot.settings';
@@ -941,6 +964,10 @@ function glotSetOption(optionName, setting) {
     let settingsObj = getOrCreateSettingsObj();
     settingsObj[optionName] = setting;
     GM_setValue(glotSettingsKey, settingsObj);
+
+    if (optionName.startsWith("codeMirror")) {
+        queueMicrotask(applyCodeMirrorSettings); //settings changes were being dropped if they occurred too fast for some reason, queueMicrotask was the cure
+    }
 }
 
 function buildConfigDialog() {
@@ -955,12 +982,20 @@ function buildConfigDialog() {
         return `<tr><td style='vertical-align: baseline;'><select id="${cbId}" name="${name}">${opts}</select></td><td><label for="glotSetting_${name}" >${label}</label></td></tr>`
     }
 
+    function makeSection({label}) {
+        return `<tr><td colspan="2" style="font-weight: bold;padding-top: 10px;border-top: 1px solid #555;">${label}</td></tr>`;
+    }
+
     function makeHtmlBoxes(boxes) {
-        return boxes.map(box => box.choice === Boolean ? makeBox(box) : makeChoice(box)).join('');
+        return boxes.map(box => {
+            if (box.type === 'section') return makeSection(box);
+            return box.choice === Boolean ? makeBox(box) : makeChoice(box);
+        }).join('');
     }
 
     function attachBoxListeners(boxes) {
-        boxes.forEach(({ name, choice}) => {
+        boxes.forEach(({ name, choice, type }) => {
+            if (type === 'section') return;
             const cbId = `glotSetting_${name}`;
             const cbox = jQuery('#'+ cbId);
             if (choice === Boolean) {
