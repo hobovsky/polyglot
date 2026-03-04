@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description User script which provides some extra functionalities to Codewars
-// @version 1.19.0
+// @version 1.19.1
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @updateURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 // @match https://www.codewars.com/*
@@ -439,24 +439,36 @@ function rankAssessmentsBreakdownDownloaded(resp) {
     if (resp.readyState !== 4) return;
     let cwResp = resp.response;
     const breakdownEntries = cwResp.data;
-    const {kataId, elem} = resp.context;
+    const {kataId, elem, link} = resp.context;
+    jQuery(elem).data('glotBreakdownLoading', false);
+    jQuery(elem).data('glotBreakdownLoaded', true);
+    if (link) link.text('(see breakdown)');
     addRankAssessmentBreakdown(breakdownEntries, elem);
+    jQuery('#glotBreakdownRow').show();
 }
 
 function getRankAssesmentsUrl(kataId) {
     return `/api/v1/code-challenges/${kataId}/assessed-ranks`;
 }
 
-function fetchRankAssessmentBreakdown(kataId, elem) {
+function fetchRankAssessmentBreakdown(kataId, elem, link=null) {
 
     let url = getRankAssesmentsUrl(kataId);
     let opts = {
         method: "GET",
         url: url,
         onreadystatechange: rankAssessmentsBreakdownDownloaded,
-        onabort: fetchAborted,
-        onerror: fetchError,
-        context: {kataId: kataId, elem: elem },
+        onabort: function() {
+            jQuery(elem).data('glotBreakdownLoading', false);
+            if (link) link.text('(see breakdown)');
+            fetchAborted();
+        },
+        onerror: function() {
+            jQuery(elem).data('glotBreakdownLoading', false);
+            if (link) link.text('(see breakdown)');
+            fetchError();
+        },
+        context: {kataId: kataId, elem: elem, link: link },
         responseType: "json"
     };
     GM_xmlhttpRequest(opts);
@@ -464,7 +476,26 @@ function fetchRankAssessmentBreakdown(kataId, elem) {
 }
 
 function toggleRankAssessmentsBreakdown() {
-    jQuery('#glotBreakdownRow').slideToggle({duration: 400});
+    jQuery('#glotBreakdownRow').toggle();
+}
+
+function toggleOrFetchRankAssessmentsBreakdown(event) {
+    event.preventDefault();
+    const link = jQuery(event.currentTarget);
+    const leftCell = jQuery(link.data('glotRankBreakdownCell'));
+    const kataId = link.data('glotRankBreakdownKataId');
+    const isLoaded = leftCell.data('glotBreakdownLoaded');
+    const isLoading = leftCell.data('glotBreakdownLoading');
+    if (isLoaded) {
+        toggleRankAssessmentsBreakdown();
+        return;
+    }
+    if (isLoading) {
+        return;
+    }
+    leftCell.data('glotBreakdownLoading', true);
+    link.text('loading...');
+    fetchRankAssessmentBreakdown(kataId, leftCell, link);
 }
 
 function addRankAssessmentsUi(elem) {
@@ -477,10 +508,11 @@ function addRankAssessmentsUi(elem) {
     let kataId = getViewedKataId();
     if(!jQuery('#glotToggleBreakdown').length) {
         leftCell.append(` <a id="glotToggleBreakdown">(see breakdown)</a> <a id="glotBreakdownLink" href="${getRankAssesmentsUrl(kataId)}">(link)</a>`);
-        jQuery('#glotToggleBreakdown').click(toggleRankAssessmentsBreakdown);
+        jQuery('#glotToggleBreakdown')
+            .data('glotRankBreakdownCell', leftCell)
+            .data('glotRankBreakdownKataId', kataId)
+            .click(toggleOrFetchRankAssessmentsBreakdown);
     }
-
-    fetchRankAssessmentBreakdown(kataId, leftCell);
 }
 
 
