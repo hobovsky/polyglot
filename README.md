@@ -166,3 +166,7 @@ Issues and PRs are welcome.
 
 - [Codewars](https://www.codewars.com)
 - [Tampermonkey](https://www.tampermonkey.net)
+
+## License
+
+MIT. See `LICENSE`.

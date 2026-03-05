@@ -28,6 +28,7 @@ Polyglot is a Tampermonkey userscript for Codewars with small, opt-in UI improve
 Project home / docs: https://github.com/hobovsky/polyglot
 Download (latest):   https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
 Bugs / ideas:        https://github.com/hobovsky/polyglot/issues
+License:             MIT (see LICENSE in the repository)
 */
 
 /* eslint no-multi-spaces: off */
