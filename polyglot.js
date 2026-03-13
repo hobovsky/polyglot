@@ -275,7 +275,7 @@ function tabidizeByLanguage(solutionPanel) {
         .children("ul.tabsList:first")
         .first();
 
-    let langs = solutionPanel.children("h6");
+    let langs = solutionPanel.children("h6").sort((a, b) => a.textContent.localeCompare(b.textContent));
     langs.each((i, langHeader) => {
         langHeader = jQuery(langHeader);
         langTabsList.append('<li><a href="#langTab-' + tabIdSerial + '">' + langHeader.text().slice(0, -1) + "</a></li>");
@@ -318,7 +318,7 @@ function tabidizePastSolutions(divElem) {
     langTabs.prepend('<ul class="tabsList"></ul>');
     let langTabsList = langTabs.children("ul.tabsList:first").first();
 
-    let langs = langDivs.children("p");
+    let langs = langDivs.children("p").sort((a, b) => a.textContent.localeCompare(b.textContent));
     const trainingLang = langNames[getTrainingLanguage()];
     let tabIndex = 0;
     langs.each((i, langHeader) => {
