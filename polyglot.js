@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description Small, opt-in quality-of-life improvements for Codewars.
-// @version 1.19.2
+// @version 1.19.3
 // @homepageURL https://github.com/hobovsky/polyglot
 // @supportURL  https://github.com/hobovsky/polyglot/issues
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
@@ -230,19 +230,19 @@ function addCopyButton(codeElem) {
     }
 
     let parent = codeElem.parent("pre");
-    if (parent.siblings(".glot-copy-container").length) {
-        return;
+    if (!parent.siblings(".glot-copy-container").length) {
+        parent.wrap("<div class='glot-code-wrapper' style='position: relative;'></div>");
+        parent.before(`
+            <div class='glot-copy-container' style='position: absolute; top: 5px; right: 5px; z-index: 100;'>
+                <button class='glotBtnCopy' type='button' title='Copy to clipboard'>${btnCaption}</button>
+            </div>
+        `);
     }
-    parent.wrap("<div class='glot-code-wrapper' style='position: relative;'></div>");
-    parent.before(`
-        <div class='glot-copy-container' style='position: absolute; top: 5px; right: 5px; z-index: 100;'>
-            <button class='glotBtnCopy' type='button' title='Copy to clipboard'>${btnCaption}</button>
-        </div>
-    `);
-
     let btn = parent.prev().find("button").first();
+    // handler must be reattached every time
     btn.on("click", copyToClipboardFunc(codeElem));
 }
+
 
 /********************************
  *           LC lambdas         *
