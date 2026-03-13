@@ -514,7 +514,8 @@ function toggleMarkdown({ target: toggle }) {
     let comment = jQuery(toggle).parents("h6").first().next().first();
     if(toggle.checked) {
         if(!orginalComments.has(toggle)) orginalComments.set(toggle, comment[0].innerHTML);
-        comment.html(`<pre style="white-space:pre-wrap">${comment[0].dataset.markdown}</pre>`);
+        comment.html(`<pre style="white-space:pre-wrap"/>`);
+        comment.children('pre').first().text(comment[0].dataset.markdown);
     } else {
         comment[0].innerHTML = orginalComments.get(toggle);
     }
