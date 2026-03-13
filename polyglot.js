@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description Small, opt-in quality-of-life improvements for Codewars.
-// @version 1.19.1
+// @version 1.19.2
 // @homepageURL https://github.com/hobovsky/polyglot
 // @supportURL  https://github.com/hobovsky/polyglot/issues
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
