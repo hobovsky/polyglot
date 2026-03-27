@@ -937,7 +937,10 @@ function getOrCreateSettingsObj() {
     let configObj = GM_getValue(glotSettingsKey);
     if(!configObj) {
         configObj = {};
-        checkBoxes.forEach(({name, choice})=>{configObj[name] = choice === Boolean ? true : choice[0];});
+        checkBoxes.forEach(({name, choice})=>{
+            if (!name) return; // Skip section items
+            configObj[name] = choice === Boolean ? true : choice[0];
+        });
     }
     return configObj;
 }
