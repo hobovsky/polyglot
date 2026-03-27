@@ -17,7 +17,7 @@
 // @require http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
 // @require http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
 // @require https://greasyfork.org/scripts/21927-arrive-js/code/arrivejs.js?version=198809
-// @require https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
+// @require https://github.com/notifyjs/notifyjs/raw/refs/heads/master/dist/notify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
