@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name    Polyglot for Codewars
 // @description Small, opt-in quality-of-life improvements for Codewars.
-// @version 1.19.3
+// @version 1.19.4
 // @homepageURL https://github.com/hobovsky/polyglot
 // @supportURL  https://github.com/hobovsky/polyglot/issues
 // @downloadURL https://github.com/hobovsky/polyglot/releases/latest/download/polyglot.js
@@ -926,7 +926,7 @@ const checkBoxes = [
     {name: 'customNavMenu',                  label: 'Use custom navigation menu',                       choice: Boolean},
     {type: 'section',                        label: 'CodeMirror Settings'},
     {name: 'codeMirrorTabSize',              label: 'CodeMirror tab size',                              choice: ["Default", "2", "4", "8"]},
-    {name: 'codeMirrorIndentWithTabs',       label: 'Indent with spaces instead of tabs',               choice: ["Default", "Yes", "No"]},
+    {name: 'codeMirrorIndentWithTabs',       label: 'Indent with tabs instead of spaces',               choice: ["Default", "Yes", "No"]},
     {name: 'codeMirrorAutoCloseBrackets',    label: 'Auto close brackets',                              choice: ["Default", "Yes", "No"]},
     {name: 'codeMirrorSmartIndent',          label: 'Automatically indent code',                        choice: ["Default", "Yes", "No"]},
 ];
